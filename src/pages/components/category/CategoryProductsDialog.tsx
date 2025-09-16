@@ -1,131 +1,179 @@
 import { useEffect, useState } from "react";
-import * as z from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Plus } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Package, DollarSign, Calendar, AlertCircle } from "lucide-react";
 import { Category } from "@/entries/category/category";
-import {  useForm } from "react-hook-form";
-import { DEFAULT_ERROR_MESSAGE } from "@/api/const";
-import { addCategory } from "@/api/category/addCategory";
-import { useToast } from "@/hooks/use-toast";
-import { updateCategory } from "@/api/category/updateCategory";
-import { Label } from "@/components/ui/label";
+import { getCategoryProducts } from "@/api/category/getCategoryProducts";
+import { Skeleton } from "@/components/ui/skeleton";
 
-interface Props {
-  open: boolean;
-  onOpenChange: (refresh: boolean, open: boolean) => void;
-  category?: Category;
-  trigger?: React.ReactNode;
+interface Product {
+  id: string;
+  name: string;
+  sku: string;
+  price: number;
+  stock: number;
+  status: "in-stock" | "low-stock" | "out-of-stock";
+  addedDate: string;
 }
 
-const schema = z.object({
-  name: z.string().min(1, "Name is required"),
-  description: z.string().optional(),
-});
+interface Props {
+  category: Category;
+  children: React.ReactNode;
+}
 
-type FormData = z.infer<typeof schema>;
+const CategoryProductsDialog = ({ category, children }: Props) => {
+  const [open, setOpen] = useState(false);
 
-
-export function CategoryProductsDialog({ open, onOpenChange, category, trigger }: Props) {
-  const { toast } = useToast();
-  const [submitting, setSubmitting] = useState(false);
-
-  console.log("category", category);
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<FormData>({
-    resolver: zodResolver(schema),
-    defaultValues: { name: "", description: "" },
-    mode: "onSubmit",
-  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [products,setProducts] = useState([])
+  const itemsPerPage = 5;
 
   useEffect(() => {
-    if (open) {
-      reset(category ?? { name: "", description: "" });
+    if (open && category?.id) {
+      fetchCategoryProducts();
     }
-  }, [category, open, reset]);
+  }, [open,category]);
 
-  const onSubmit = async (data: FormData) => {
-    setSubmitting(true);
-    const payload: any = { ...data };
-
-    try {
-      const result = category ? await updateCategory(category.id, payload) : await addCategory(payload);
-      if (result) {
-        onOpenChange(true, false);
-        toast({
-          variant: "success",
-          title: `Category ${category ? "Updated" : "Added"} Successfully`,
-        });
+  const fetchCategoryProducts = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+  
+        const response = await getCategoryProducts(category.id);
+        setProducts(response);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to fetch categories");
+      } finally {
+        setLoading(false);
       }
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: `${(error as any)?.response?.data?.message || DEFAULT_ERROR_MESSAGE}`,
-      });
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    };
 
-  const onClose = () => {
-    reset();
-    onOpenChange(false, false);
-  };
+
+   const getStatusBadge = (status: string) => {
+     switch (status) {
+       case "InStock":
+         return <Badge className="bg-success text-success-foreground">In Stock</Badge>;
+       case "LowStock":
+         return <Badge className="bg-warning text-warning-foreground">Low Stock</Badge>;
+       case "OutofStock":
+         return <Badge variant="destructive">Out of Stock</Badge>;
+       default:
+         return <Badge variant="secondary">{status}</Badge>;
+     }
+   };
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(isOpen) => {
-        if (!isOpen) {
-          reset();
-        }
-        onOpenChange(false, false);
-      }}
-    >
-      {/* <DialogTrigger asChild>
-        {trigger || (
-          <Button className="bg-gradient-primary">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Category
-          </Button>
-        )}
-      </DialogTrigger> */}
-      <DialogContent className="sm:max-w-[425px]">
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle>{category ? "Edit" : "Add New"} Category</DialogTitle>
-          <DialogDescription>Create a new category for your inventory.</DialogDescription>
+          <DialogTitle className="flex items-center gap-2">
+            <Package className="h-5 w-5" />
+            Products in {category.name}
+          </DialogTitle>
+          <DialogDescription>Showing {category.productCount} products in this category</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="grid gap-6 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Category Name</Label>
-              <Input id="name" placeholder="Enter category name" {...register("name")} />
-              {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
-            </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea id="description" placeholder="Category description" {...register("description")} rows={3} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={submitting}>
-              {category ? "Edit" : "Add"} Category
-            </Button>
-          </DialogFooter>
-        </form>
+        <ScrollArea className="max-h-[60vh]">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Product Name</TableHead>
+                <TableHead>SKU</TableHead>
+                <TableHead className="text-right">Price</TableHead>
+                <TableHead className="text-center">Stock</TableHead>
+                <TableHead className="text-center">Status</TableHead>
+                <TableHead>Added Date</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                // Loading skeleton rows
+                Array.from({ length: itemsPerPage }).map((_, index) => (
+                  <TableRow key={index} className="border-b border-border">
+                    <TableCell className="py-4 px-4">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="w-10 h-10 rounded-lg" />
+                        <Skeleton className="h-4 w-48" />
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-4 px-4">
+                      <Skeleton className="h-4 w-16" />
+                    </TableCell>
+                    <TableCell className="py-4 px-4">
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell className="py-4 px-4">
+                      <Skeleton className="h-4 w-12" />
+                    </TableCell>
+                    <TableCell className="py-4 px-4">
+                      <Skeleton className="h-4 w-16" />
+                    </TableCell>
+                    <TableCell className="py-4 px-4">
+                      <Skeleton className="h-6 w-20" />
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : error ? (
+                // Error state
+                <TableRow>
+                  <TableCell colSpan={8} className="py-12 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <AlertCircle className="h-12 w-12 text-destructive" />
+                      <div>
+                        <h3 className="font-medium text-foreground">Failed to load products</h3>
+                      </div>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : products.length === 0 ? (
+                // Empty state
+                <TableRow>
+                  <TableCell colSpan={8} className="py-12 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <Package className="h-12 w-12 text-muted-foreground" />
+                      <div>
+                        <h3 className="font-medium text-foreground">No products found</h3>
+                        {/* <p className="text-muted-foreground">{searchQuery ? "Try adjusting your search terms" : "No products available at the moment"}</p> */}
+                      </div>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                // Product rows
+                products.map((product) => (
+                  <TableRow key={product.id}>
+                    <TableCell className="font-medium">{product.name}</TableCell>
+                    <TableCell className="text-muted-foreground">{product.serialNumber}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        {product.price}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {product.quantity}
+                      <span className="text-muted-foreground text-sm ml-1">/ {product.unit}</span>
+                    </TableCell>
+                    <TableCell className="text-center">{getStatusBadge(product.status)}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <Calendar className="h-3 w-3" />
+                        {new Date(product.addedDate).toLocaleDateString()}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+export default CategoryProductsDialog;

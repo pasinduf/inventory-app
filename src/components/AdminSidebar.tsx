@@ -29,13 +29,13 @@ const mainItems = [
   { title: "Products", url: "/products", icon: Package },
 ];
 
-const analyticsItems = [
-  { title: "Reports", url: "/reports", icon: BarChart3 },
-  { title: "Sales Analytics", url: "/analytics", icon: ShoppingCart },
+const orderItems = [
+  { title: "Orders", url: "/orders", icon: BarChart3 },
+  { title: "Credit Orders", url: "/credit-orders", icon: ShoppingCart },
 ];
 
-const systemItems = [
-  { title: "Settings", url: "/settings", icon: Settings },
+const otherItems = [
+  { title: "Expenses", url: "/expenses", icon: Settings },
 ];
 
 export function AdminSidebar() {
@@ -78,9 +78,7 @@ export function AdminSidebar() {
 
         {/* Main Navigation */}
         <SidebarGroup>
-          <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>
-            Main
-          </SidebarGroupLabel>
+          <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>Main</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {mainItems.map((item) => (
@@ -97,14 +95,12 @@ export function AdminSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Analytics */}
+        {/* Orders */}
         <SidebarGroup>
-          <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>
-            Analytics
-          </SidebarGroupLabel>
+          <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>Orders</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {analyticsItems.map((item) => (
+              {orderItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} className={getNavClass(item.url)}>
@@ -118,14 +114,12 @@ export function AdminSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* System */}
+        {/* Other */}
         <SidebarGroup>
-          <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>
-            System
-          </SidebarGroupLabel>
+          <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>Other</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {systemItems.map((item) => (
+              {otherItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} className={getNavClass(item.url)}>

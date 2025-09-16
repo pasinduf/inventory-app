@@ -1,3 +1,5 @@
+import { Product } from "./product";
+
 export class ProductResponse {
   count: number;
   pageIndex: number;
@@ -5,12 +7,3 @@ export class ProductResponse {
   items: Product[]
 }
 
-export class Product {
-  id: number;
-  name: string;
-  serialNumber: string;
-  unit: string;
-  category: string;
-  quantity: string;
-  status: string;
-}

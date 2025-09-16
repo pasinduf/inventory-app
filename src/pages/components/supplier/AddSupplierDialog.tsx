@@ -5,20 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Category } from "@/entries/category/category";
 import { useForm } from "react-hook-form";
 import { DEFAULT_ERROR_MESSAGE } from "@/api/const";
-import { addCategory } from "@/api/category/addCategory";
 import { useToast } from "@/hooks/use-toast";
-import { updateCategory } from "@/api/category/updateCategory";
 import { Label } from "@/components/ui/label";
 import { Supplier } from "@/entries/supplier/supplier";
+import { updateSupplier } from "@/api/supplier/updateSupplier";
+import { addSupplier } from "@/api/supplier/addSupplier";
 
 interface Props {
   open: boolean;
   onOpenChange: (refresh: boolean, open: boolean) => void;
   supplier?: Supplier;
-  trigger?: React.ReactNode;
 }
 
 const schema = z.object({
@@ -29,7 +27,7 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-export function AddSupplierDialog({ open, onOpenChange, supplier, trigger }: Props) {
+export function AddSupplierDialog({ open, onOpenChange, supplier }: Props) {
   const { toast } = useToast();
   const [submitting, setSubmitting] = useState(false);
 
@@ -54,23 +52,23 @@ export function AddSupplierDialog({ open, onOpenChange, supplier, trigger }: Pro
     setSubmitting(true);
     const payload: any = { ...data };
 
-    // try {
-    //   const result = category ? await updateCategory(category.id, payload) : await addCategory(payload);
-    //   if (result) {
-    //     onOpenChange(true, false);
-    //     toast({
-    //       variant: "success",
-    //       title: `Category ${category ? "Updated" : "Added"} Successfully`,
-    //     });
-    //   }
-    // } catch (error: any) {
-    //   toast({
-    //     variant: "destructive",
-    //     title: `${(error as any)?.response?.data?.message || DEFAULT_ERROR_MESSAGE}`,
-    //   });
-    // } finally {
-    //   setSubmitting(false);
-    // }
+    try {
+      const result = supplier ? await updateSupplier(supplier.id, payload) : await addSupplier(payload);
+      if (result) {
+        onOpenChange(true, false);
+        toast({
+          variant: "success",
+          title: `Supplier ${supplier ? "Updated" : "Added"} Successfully`,
+        });
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: `${(error as any)?.response?.data?.message || DEFAULT_ERROR_MESSAGE}`,
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const onClose = () => {
@@ -105,7 +103,7 @@ export function AddSupplierDialog({ open, onOpenChange, supplier, trigger }: Pro
           <div className="grid gap-6 py-4">
             <div className="grid gap-2">
               <Label htmlFor="name">Supplier Name</Label>
-              <Input id="name" placeholder="Enter category name" {...register("name")} />
+              <Input id="name" placeholder="Enter supplier name" {...register("name")} />
               {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
             </div>
 

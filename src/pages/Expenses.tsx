@@ -5,54 +5,77 @@ import { Input } from "@/components/ui/input";
 import { Search, Plus, Filter, MoreHorizontal, Package, Edit, Trash2, AlertCircle, RefreshCw } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AddSupplierDialog } from "./components/supplier/AddSupplierDialog";
-import { getSuppliers } from "@/api/supplier/getSuppliers";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { deleteSupplier } from "@/api/supplier/deleteSupplier";
 import { DEFAULT_ERROR_MESSAGE } from "@/api/const";
+import { getExpenses } from "@/api/expense/getExpenses";
+import { deleteExpense } from "@/api/expense/deleteExpense";
+import { AddExpenseDialog } from "./components/expense/AddExpenseDialog";
+import { yyyyMMDD } from "@/lib/dateFormatter";
+import { PaginationWrapper } from "@/components/PaginationWrapper";
 
-const Suppliers = () => {
-
+const Expenses = () => {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
-  const [suppliers, setSuppliers] = useState([]);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [isInitial, setIsInitial] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-   const [open, setOpen] = useState(false);
-   const [supplier, setSupplier] = useState(null);
   const itemsPerPage = 5;
+
+  const [open, setOpen] = useState(false);
+  const [expense, setExpense] = useState(null);
 
 
   useEffect(() => {
-    fetchSuppliers();
+    // First day of the current month
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    const today = now;
+
+    setFromDate(yyyyMMDD(firstDay));
+    setToDate(yyyyMMDD(today));
   }, []);
 
-  const fetchSuppliers = async () => {
+
+   useEffect(() => {
+     if (fromDate && toDate && isInitial) {
+       fetchExpenses();
+     }
+   }, [fromDate, toDate, isInitial]);
+
+
+  const fetchExpenses = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await getSuppliers();
-      setSuppliers(response);
+      const response = await getExpenses({
+        fromDate,
+        toDate
+      });
+      setData(response);
+      if(isInitial) setIsInitial(false);
+      handlePageChange(1)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch suppliers");
+      setError(err instanceof Error ? err.message : "Failed to fetch expenses");
     } finally {
       setLoading(false);
     }
   };
 
-  
-  const onDeleteSupplier= async (id)=>{
+  const onDeleteExpense = async (id) => {
     try {
-      const result = await deleteSupplier(id);
+      const result = await deleteExpense(id);
       if (result) {
         toast({
           variant: "success",
-          title: `Supplier Deleted Successfully`,
+          title: `Expense Deleted Successfully`,
         });
-        fetchSuppliers();
+        fetchExpenses();
       }
     } catch (error: any) {
       toast({
@@ -60,46 +83,59 @@ const Suppliers = () => {
         title: `${(error as any)?.response?.data?.message || DEFAULT_ERROR_MESSAGE}`,
       });
     }
-  }
-  
-  const onOpenChange = (refresh: boolean, open: boolean) => {
-    if (refresh) fetchSuppliers();
-    setOpen(open);
-    setSupplier(null);
   };
 
-  const filteredSuppliers = suppliers.filter((supplier) => supplier.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const onOpenChange = (refresh: boolean, open: boolean) => {
+    if (refresh) fetchExpenses();
+    setOpen(open);
+    setExpense(null);
+  };
+
+  const filteredData = data.filter((expense) => expense.name.toLowerCase().includes(searchQuery.toLowerCase()));
+
+   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+   const startIndex = (currentPage - 1) * itemsPerPage;
+   const paginatedData = filteredData.slice(startIndex, startIndex + itemsPerPage);
+
+   const handlePageChange = (page: number) => {
+     setCurrentPage(page);
+   };
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Suppliers</h1>
-          <p className="text-muted-foreground">Manage your suppliers details.</p>
+          <h1 className="text-3xl font-bold text-foreground">Expenses</h1>
+          <p className="text-muted-foreground">Manage your expense details.</p>
         </div>
         <Button className="bg-gradient-primary" onClick={() => setOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Supplier
+          Add Expense
         </Button>
-        <AddSupplierDialog open={open} onOpenChange={onOpenChange} supplier={supplier} />
+        <AddExpenseDialog open={open} onOpenChange={onOpenChange} expense={expense} />
       </div>
 
-      {/* Search and Filter Bar */}
       <Card className="shadow-card">
         <CardContent className="p-2">
           <div className="flex items-center gap-4">
-            <div className="relative flex-1">
+            <div className="relative flex-[6]">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search suppliers by name" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
+              <Input placeholder="Search expense by reason" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
             </div>
-            {/* <Button variant="outline">
-              <Filter className="h-4 w-4 mr-2" />
-              Filters
-            </Button> */}
-            <Button variant="outline" onClick={fetchSuppliers} disabled={loading}>
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-              Refresh
-            </Button>
+
+            <div className="flex-[2]">
+              <Input id="fromDate" type="date" placeholder="Select date" className="w-full" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+            </div>
+
+            <div className="flex-[2]">
+              <Input id="toDate" type="date" placeholder="Select date" className="w-full" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+            </div>
+
+            <div className="flex-[2]">
+              <Button variant="outline" className="w-full" onClick={fetchExpenses}>
+                Search
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -108,7 +144,7 @@ const Suppliers = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Suppliers ({filteredSuppliers.length})
+            Expenses ({filteredData.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -116,9 +152,9 @@ const Suppliers = () => {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Name</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Contact</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Address</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Date</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Reason</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Amount</th>
                 </tr>
               </thead>
               <tbody>
@@ -162,39 +198,35 @@ const Suppliers = () => {
                       <div className="flex flex-col items-center gap-3">
                         <AlertCircle className="h-12 w-12 text-destructive" />
                         <div>
-                          <h3 className="font-medium text-foreground">Failed to load suppliers</h3>
+                          <h3 className="font-medium text-foreground">Failed to load records</h3>
                           {/* <p className="text-muted-foreground">{error}</p> */}
                         </div>
                       </div>
                     </td>
                   </tr>
-                ) : filteredSuppliers.length === 0 ? (
+                ) : paginatedData.length === 0 ? (
                   // Empty state
                   <tr>
                     <td colSpan={8} className="py-12 text-center">
                       <div className="flex flex-col items-center gap-3">
                         <Package className="h-12 w-12 text-muted-foreground" />
                         <div>
-                          <h3 className="font-medium text-foreground">No suppliers found</h3>
-                          {/* <p className="text-muted-foreground">{searchQuery ? "Try adjusting your search terms" : "No products available at the moment"}</p> */}
+                          <h3 className="font-medium text-foreground">No records found</h3>
                         </div>
                       </div>
                     </td>
                   </tr>
                 ) : (
-                  // Supplier rows
-                  filteredSuppliers.map((supplier) => (
-                    <tr key={supplier.id} className="border-b border-border hover:bg-muted/50">
+                  // Expense rows
+                  paginatedData.map((expense) => (
+                    <tr key={expense.id} className="border-b border-border hover:bg-muted/50">
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center">
-                            <Package className="h-5 w-5 text-white" />
-                          </div>
-                          <span className="font-medium">{supplier.name}</span>
+                          <span className="font-medium">{expense.date}</span>
                         </div>
                       </td>
-                      <td className="py-4 px-4 text-muted-foreground">{supplier.contactNumber}</td>
-                      <td className="py-4 px-4">{supplier.address}</td>
+                      <td className="py-4 px-4 text-muted-foreground">{expense.name}</td>
+                      <td className="py-4 px-4">{expense.amount}</td>
 
                       <td className="py-4 px-4 text-right">
                         <DropdownMenu>
@@ -206,23 +238,23 @@ const Suppliers = () => {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem
                               onClick={() => {
-                                setSupplier(supplier);
+                                setExpense(expense);
                                 setOpen(true);
                               }}
                             >
                               <Edit className="h-4 w-4 mr-2" />
-                              Edit Supplier
+                              Edit Expense
                             </DropdownMenuItem>
                             <ConfirmDialog
-                              title="Delete Supplier"
-                              description={`Are you sure you want to delete the "${supplier.name}"?`}
+                              title="Delete Expense"
+                              description="Are you sure you want to delete this expense?"
                               confirmText="Delete"
                               variant="destructive"
-                              onConfirm={() => onDeleteSupplier(supplier.id)}
+                              onConfirm={() => onDeleteExpense(expense.id)}
                             >
                               <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>
                                 <Trash2 className="h-4 w-4 mr-2" />
-                                Delete Supplier
+                                Delete Expense
                               </DropdownMenuItem>
                             </ConfirmDialog>
                           </DropdownMenuContent>
@@ -234,10 +266,15 @@ const Suppliers = () => {
               </tbody>
             </table>
           </div>
+
+          {!loading && !error && paginatedData.length > 0 && (
+            <PaginationWrapper currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} className="mt-6" />
+          )}
         </CardContent>
       </Card>
     </div>
   );
 };
 
-export default Suppliers;
+export default Expenses;
+

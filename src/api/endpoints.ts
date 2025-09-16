@@ -3,4 +3,5 @@ export const ENDPOINTS = {
   SUPPLIER: "/supplier",
   CATEGORY: "/category",
   PRODUCT: "/product",
+  EXPENSE: "/expenses",
 };

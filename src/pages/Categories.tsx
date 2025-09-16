@@ -7,7 +7,8 @@ import {
   Package,
   Edit,
   Trash2,
-  MoreHorizontal
+  MoreHorizontal,
+  AlertCircle
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -18,14 +19,25 @@ import {
 import { useEffect, useState } from "react";
 import { getCategories } from "@/api/category/getCategories";
 import { AddCategoryDialog } from "./components/category/AddCategoryDialog";
+import CategoryProductsDialog from "./components/category/CategoryProductsDialog";
+import ConfirmDialog from "@/components/ui/confirm-dialog";
+import { deleteCategory } from "@/api/category/deleteCategory";
+import { useToast } from "@/hooks/use-toast";
+import { DEFAULT_ERROR_MESSAGE } from "@/api/const";
+import { Skeleton } from "@/components/ui/skeleton";
+import { AddProductDialog } from "./components/product/AddProductDialog";
 
 const Categories = () => {
 
+  const { toast } = useToast();
   const [data,setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState(null);
+  const [newProduct, setnewProduct] = useState(null);
+  const [openAddProduct, setOpenAddProduct] = useState(false);
+  const itemsPerPage = 6;
 
 
    useEffect(() => {
@@ -53,6 +65,30 @@ const Categories = () => {
     setCategory(null);
   }
 
+  const onDeleteCategory= async (id)=>{
+    try {
+      const result = await deleteCategory(id);
+      if (result) {
+        toast({
+          variant: "success",
+          title: `Category Deleted Successfully`,
+        });
+        fetchCategories();
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: `${(error as any)?.response?.data?.message || DEFAULT_ERROR_MESSAGE}`,
+      });
+    }
+  }
+
+
+  const onOpenAddProductChange = (refresh: boolean, open: boolean) => {
+    if (refresh) fetchCategories();
+    setOpenAddProduct(open);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -69,76 +105,132 @@ const Categories = () => {
 
       {/* Categories Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {data.map((category) => (
-          <Card key={category.id} className="shadow-card hover:shadow-elevated transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center`}>
-                    <FolderTree className="h-6 w-6 text-white" />
+        {loading ? (
+          Array.from({ length: itemsPerPage }).map((_, index) => (
+            <Card key={index} className="shadow-card">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="w-12 h-12 rounded-lg" />
+                    <div>
+                      <Skeleton className="h-5 w-24 mb-2" />
+                      <Skeleton className="h-4 w-20" />
+                    </div>
                   </div>
-                  <div>
-                    <CardTitle className="text-lg">{category.name}</CardTitle>
-                    <Badge variant="secondary" className="mt-1 text-sm">
-                      <Package className="h-3 w-3 mr-1" />
-                      {category.productCount} products
-                    </Badge>
-                  </div>
+                  <Skeleton className="h-8 w-8 rounded" />
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem 
-                    onClick={() => {
-                      setCategory(category);
-                      setOpen(true)
-                    }}>
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit Category
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="text-destructive">
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete Category
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground text-sm mb-4">{category.description}</p>
-              <div className="flex items-center justify-between">
-                <Button variant="outline" size="sm">
-                  View Products
-                </Button>
-                <Button variant="ghost" size="sm">
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Add New Category Card */}
-      {/* <Card className="shadow-card border-2 border-dashed border-muted hover:border-primary transition-colors cursor-pointer">
-        <CardContent className="flex flex-col items-center justify-center py-12">
-          <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mb-4">
-            <Plus className="h-8 w-8 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-4 w-full mb-4" />
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-8 w-24" />
+                  <Skeleton className="h-8 w-8" />
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : error ? (
+          // Error state
+          <div className="col-span-full">
+            <Card className="shadow-card">
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+                <h3 className="font-medium text-foreground mb-2">Failed to load categories</h3>
+              </CardContent>
+            </Card>
           </div>
-          <h3 className="text-lg font-medium mb-2">Create New Category</h3>
-          <p className="text-muted-foreground text-center mb-4">
-            Add a new category to organize your products better
-          </p>
-          <Button className="bg-gradient-primary">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Category
-          </Button>
-        </CardContent>
-      </Card> */}
+        ) : data.length === 0 ? (
+          <div className="flex flex-col items-center gap-3">
+            <Package className="h-12 w-12 text-muted-foreground" />
+            <div>
+              <h3 className="font-medium text-foreground">No categories found</h3>
+              {/* <p className="text-muted-foreground">{searchQuery ? "Try adjusting your search terms" : "No products available at the moment"}</p> */}
+            </div>
+          </div>
+        ) : (
+          data.map((category) => (
+            <Card key={category.id} className="shadow-card hover:shadow-elevated transition-shadow">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center`}>
+                      <FolderTree className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg">{category.name}</CardTitle>
+                      <Badge variant="secondary" className="mt-1 text-sm">
+                        <Package className="h-3 w-3 mr-1" />
+                        {category.productCount} products
+                      </Badge>
+                    </div>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setCategory(category);
+                          setOpen(true);
+                        }}
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit Category
+                      </DropdownMenuItem>
+
+                      <ConfirmDialog
+                        title="Delete Category"
+                        description={`Are you sure you want to delete the "${category.name}" category?`}
+                        confirmText="Delete"
+                        variant="destructive"
+                        onConfirm={() => onDeleteCategory(category.id)}
+                      >
+                        <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Category
+                        </DropdownMenuItem>
+                      </ConfirmDialog>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground text-sm mb-4">{category.description}</p>
+                <div className="flex items-center justify-between">
+                  <CategoryProductsDialog category={category}>
+                    <Button variant="outline" size="sm">
+                      View Products
+                    </Button>
+                  </CategoryProductsDialog>
+                  <Button variant="ghost" size="sm" onClick={() => {
+                    setnewProduct({
+                      name: "",
+                      category: `${category.id}`,
+                      supplier: "",
+                      unit: "",
+                      quantity: 0,
+                      buyingPrice: 0,
+                      sellingPrice: 0,
+                    });
+                    setOpenAddProduct(true)
+                  }}
+                    >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
+        <AddProductDialog 
+          open={openAddProduct} 
+          onOpenChange={onOpenAddProductChange} 
+          newProduct={newProduct}
+        />
+      </div>
     </div>
   );
 };
