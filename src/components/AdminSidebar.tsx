@@ -7,7 +7,8 @@ import {
   AlertTriangle,
   BarChart3,
   Settings,
-  ShoppingCart
+  ShoppingCart,
+  User
 } from "lucide-react";
 
 import {
@@ -27,6 +28,7 @@ const mainItems = [
   { title: "Suppliers", url: "/suppliers", icon: Building2 },
   { title: "Categories", url: "/categories", icon: FolderTree },
   { title: "Products", url: "/products", icon: Package },
+  { title: "Customers", url: "/customers", icon: User },
 ];
 
 const orderItems = [

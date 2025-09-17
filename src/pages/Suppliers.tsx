@@ -190,11 +190,11 @@ const Suppliers = () => {
                           <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center">
                             <Package className="h-5 w-5 text-white" />
                           </div>
-                          <span className="font-medium">{supplier.name}</span>
+                          <span className="font-medium text-muted-foreground">{supplier.name}</span>
                         </div>
                       </td>
                       <td className="py-4 px-4 text-muted-foreground">{supplier.contactNumber}</td>
-                      <td className="py-4 px-4">{supplier.address}</td>
+                      <td className="py-4 px-4 text-muted-foreground">{supplier.address}</td>
 
                       <td className="py-4 px-4 text-right">
                         <DropdownMenu>

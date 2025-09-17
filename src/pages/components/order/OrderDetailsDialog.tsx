@@ -1,60 +1,50 @@
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Package, DollarSign, Calendar, AlertCircle } from "lucide-react";
-import { Category } from "@/entries/category/category";
-import { getCategoryProducts } from "@/api/category/getCategoryProducts";
+import { Package,AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getOrderDetails } from "@/api/orders/getOrderDetails";
+import { getDate, getTime, yyyyMMDD } from "@/lib/dateFormatter";
 
 
 interface Props {
-  category: Category;
+  orderId: number;
+  orderNumber:string;
   children: React.ReactNode;
 }
 
-const CategoryProductsDialog = ({ category, children }: Props) => {
+const OrderDetailsDialog = ({ orderId, orderNumber, children }: Props) => {
   const [open, setOpen] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [products,setProducts] = useState([])
+  const [order, setOrder] = useState(null);
+  
   const itemsPerPage = 5;
 
-  useEffect(() => {
-    if (open && category?.id) {
-      fetchCategoryProducts();
-    }
-  }, [open,category]);
-
-  const fetchCategoryProducts = async () => {
-      try {
-        setLoading(true);
-        setError(null);
   
-        const response = await getCategoryProducts(category.id);
-        setProducts(response);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch categories");
-      } finally {
-        setLoading(false);
-      }
-    };
 
+  useEffect(() => {
+    if (open && orderId) {
+      fetchOrderDetails();
+    }
+  }, [open, orderId]);
 
-   const getStatusBadge = (status: string) => {
-     switch (status) {
-       case "InStock":
-         return <Badge className="bg-success text-success-foreground">In Stock</Badge>;
-       case "LowStock":
-         return <Badge className="bg-warning text-warning-foreground">Low Stock</Badge>;
-       case "OutofStock":
-         return <Badge variant="destructive">Out of Stock</Badge>;
-       default:
-         return <Badge variant="secondary">{status}</Badge>;
-     }
-   };
+  const fetchOrderDetails = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await getOrderDetails(orderId);
+      setOrder(response);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch order details");
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -63,9 +53,16 @@ const CategoryProductsDialog = ({ category, children }: Props) => {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Products in {category.name}
+            Order# {orderNumber}
           </DialogTitle>
-          <DialogDescription>Showing {category.productCount} products in this category</DialogDescription>
+
+          {order && (
+            <DialogDescription>
+              <div className="ml-7">
+                Date: {getDate(order.createdAt)} {getTime(order?.createdAt)}
+              </div>
+            </DialogDescription>
+          )}
         </DialogHeader>
 
         <ScrollArea className="max-h-[60vh]">
@@ -75,9 +72,9 @@ const CategoryProductsDialog = ({ category, children }: Props) => {
                 <TableHead>Product Name</TableHead>
                 <TableHead>SKU</TableHead>
                 <TableHead className="text-right">Price</TableHead>
-                <TableHead className="text-center">Stock</TableHead>
-                <TableHead className="text-center">Status</TableHead>
-                <TableHead>Added Date</TableHead>
+                <TableHead className="text-right">Quantity</TableHead>
+                <TableHead className="text-right">Discount</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -120,14 +117,14 @@ const CategoryProductsDialog = ({ category, children }: Props) => {
                     </div>
                   </TableCell>
                 </TableRow>
-              ) : products.length === 0 ? (
+              ) : order.orderItems?.length === 0 ? (
                 // Empty state
                 <TableRow>
                   <TableCell colSpan={8} className="py-12 text-center">
                     <div className="flex flex-col items-center gap-3">
                       <Package className="h-12 w-12 text-muted-foreground" />
                       <div>
-                        <h3 className="font-medium text-foreground">No products found</h3>
+                        <h3 className="font-medium text-foreground">No records found</h3>
                         {/* <p className="text-muted-foreground">{searchQuery ? "Try adjusting your search terms" : "No products available at the moment"}</p> */}
                       </div>
                     </div>
@@ -135,28 +132,37 @@ const CategoryProductsDialog = ({ category, children }: Props) => {
                 </TableRow>
               ) : (
                 // Product rows
-                products.map((product) => (
-                  <TableRow key={product.id}>
-                    <TableCell className="font-medium">{product.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{product.serialNumber}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        {product.price}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {product.quantity}
-                      <span className="text-muted-foreground text-sm ml-1">/ {product.unit}</span>
-                    </TableCell>
-                    <TableCell className="text-center">{getStatusBadge(product.status)}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1 text-muted-foreground">
-                        <Calendar className="h-3 w-3" />
-                        {new Date(product.addedDate).toLocaleDateString()}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+                <>
+                  {order.orderItems?.map((item) => (
+                    <TableRow key={item.serialNumber}>
+                      <TableCell className="text-muted-foreground">{item.productName}</TableCell>
+                      <TableCell className="text-muted-foreground">{item.serialNumber}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1 text-muted-foreground">{item.price}</div>
+                      </TableCell>
+                      <TableCell className="text-right text-muted-foreground">
+                        {item.quantity}
+                        <span className="text-sm ml-1">/ {item.unit}</span>
+                      </TableCell>
+                      <TableCell className="text-right text-muted-foreground">
+                        <div className="flex items-center justify-end gap-1">{item.discount}</div>
+                      </TableCell>
+                      <TableCell className="text-right text-muted-foreground">
+                        <div className="flex items-center justify-end gap-1">{item.amount}</div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+
+                  {order && (
+                    <TableRow>
+                      <TableCell>Total</TableCell>
+                      <TableCell colSpan={2}></TableCell>
+                      <TableCell className="text-right text-muted-foreground">{order.grossAmount}</TableCell>
+                      <TableCell className="text-right text-muted-foreground">{order.discount}</TableCell>
+                      <TableCell className="text-right">{order.netAmount}</TableCell>
+                    </TableRow>
+                  )}
+                </>
               )}
             </TableBody>
           </Table>
@@ -166,4 +172,4 @@ const CategoryProductsDialog = ({ category, children }: Props) => {
   );
 };
 
-export default CategoryProductsDialog;
+export default OrderDetailsDialog;

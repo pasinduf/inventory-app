@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Expense } from "@/entries/expense/expense";
 import { updateExpense } from "@/api/expense/updateExpense";
 import { addExpense } from "@/api/expense/addExpense";
+import { yyyyMMDD } from "@/lib/dateFormatter";
 
 interface Props {
   open: boolean;
@@ -21,7 +22,7 @@ interface Props {
 
 const schema = z.object({
   date: z.string().min(1, "Date is required"),
-  name: z.string().min(1, "Name is required"),
+  name: z.string().min(1, "Reason is required"),
   amount: z.number().min(0, "Amount must be positive"),
   description: z.string().optional(),
 });
@@ -31,6 +32,7 @@ type FormData = z.infer<typeof schema>;
 export function AddExpenseDialog({ open, onOpenChange, expense }: Props) {
   const { toast } = useToast();
   const [submitting, setSubmitting] = useState(false);
+  const today = new Date();
 
   const {
     register,
@@ -39,13 +41,13 @@ export function AddExpenseDialog({ open, onOpenChange, expense }: Props) {
     reset,
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { name: "", date: "", amount: 0, description: "" },
+    defaultValues: { name: "", date: yyyyMMDD(today), amount: 0, description: "" },
     mode: "onSubmit",
   });
 
   useEffect(() => {
     if (open) {
-      reset(expense ?? { name: "", date: "", amount: 0, description: "" });
+      reset(expense ?? { name: "", date: yyyyMMDD(today), amount: 0, description: "" });
     }
   }, [expense, open, reset]);
 
@@ -100,8 +102,8 @@ export function AddExpenseDialog({ open, onOpenChange, expense }: Props) {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="name">Expense</Label>
-              <Input id="name" placeholder="Enter expense" {...register("name")} />
+              <Label htmlFor="name">Reason</Label>
+              <Input id="name" placeholder="Enter reason" {...register("name")} />
               {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
             </div>
 

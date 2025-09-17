@@ -238,8 +238,8 @@ const Products = () => {
                           <span className="font-medium">{product.name}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="py-4 px-4 text-muted-foreground">{product.serialNumber}</TableCell>
-                      <TableCell className="py-4 px-4">{product.category}</TableCell>
+                      <TableCell className="py-4 px-4">{product.serialNumber}</TableCell>
+                      <TableCell className="py-4 px-4 text-muted-foreground">{product.category}</TableCell>
                       <TableCell className="py-4 px-4">
                         {/* <span
                           className={`font-medium ${
@@ -248,11 +248,11 @@ const Products = () => {
                         >
                           {product.stock}
                         </span> */}
-                        <span className="font-medium text-foreground">{product.quantity}</span>
+                        <span className="font-medium text-muted-foreground">{product.quantity}</span>
                         {/* <span className="text-muted-foreground text-sm ml-1">/ {product.minStock} min</span> */}
                         <span className="text-muted-foreground text-sm ml-1">/ {product.unit}</span>
                       </TableCell>
-                      <TableCell className="py-4 px-4 font-medium">{product.price}</TableCell>
+                      <TableCell className="py-4 px-4 font-medium text-muted-foreground">{product.price}</TableCell>
                       <TableCell className="py-4 px-4">{getStatusBadge(product.status)}</TableCell>
                       <TableCell className="py-4 px-4 text-muted-foreground">{product.supplier}</TableCell>
                       <TableCell className="py-4 px-4 text-right">

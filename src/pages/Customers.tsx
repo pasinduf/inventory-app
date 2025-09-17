@@ -2,81 +2,60 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, MoreHorizontal, Package, Edit, Trash2, AlertCircle, Info } from "lucide-react";
+import { Search, Plus, MoreHorizontal, Package, Edit, Trash2, AlertCircle, Info, RefreshCw } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { DEFAULT_ERROR_MESSAGE } from "@/api/const";
-import { getExpenses } from "@/api/expense/getExpenses";
-import { deleteExpense } from "@/api/expense/deleteExpense";
-import { AddExpenseDialog } from "./components/expense/AddExpenseDialog";
-import { yyyyMMDD } from "@/lib/dateFormatter";
 import { PaginationWrapper } from "@/components/PaginationWrapper";
+import { AddCustomerDialog } from "./components/customer/AddCustomerDialog";
+import { getCustomers } from "@/api/customer/getCustomers";
+import { deleteCustomer } from "@/api/customer/deleteCustomer";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { Badge } from "@/components/ui/badge";
 
-const Expenses = () => {
+const Customers = () => {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
-  const [isInitial, setIsInitial] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [data, setData] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const itemsPerPage = 5;
 
   const [open, setOpen] = useState(false);
-  const [expense, setExpense] = useState(null);
+  const [customer, setCustomer] = useState(null);
 
 
   useEffect(() => {
-    // First day of the current month
-    const now = new Date();
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-    const today = now;
+      fetchCustomers();
+  },[]);
 
-    setFromDate(yyyyMMDD(firstDay));
-    setToDate(yyyyMMDD(today));
-  }, []);
-
-
-   useEffect(() => {
-     if (fromDate && toDate && isInitial) {
-       fetchExpenses();
-     }
-   }, [fromDate, toDate, isInitial]);
-
-
-  const fetchExpenses = async () => {
+  const fetchCustomers = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await getExpenses({
-        fromDate,
-        toDate
-      });
-      setData(response);
-      if(isInitial) setIsInitial(false);
-      handlePageChange(1)
+      const response = await getCustomers();
+      setCustomers(response);
+      handlePageChange(1);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch expenses");
+      setError(err instanceof Error ? err.message : "Failed to fetch customers");
     } finally {
       setLoading(false);
     }
   };
 
-  const onDeleteExpense = async (id) => {
+  const onDeleteCustomer = async (id) => {
     try {
-      const result = await deleteExpense(id);
+      const result = await deleteCustomer(id);
       if (result) {
         toast({
           variant: "success",
-          title: `Expense Deleted Successfully`,
+          title: `Customer Deleted Successfully`,
         });
-        fetchExpenses();
+        fetchCustomers();
       }
     } catch (error: any) {
       toast({
@@ -87,56 +66,57 @@ const Expenses = () => {
   };
 
   const onOpenChange = (refresh: boolean, open: boolean) => {
-    if (refresh) fetchExpenses();
+    if (refresh) fetchCustomers();
     setOpen(open);
-    setExpense(null);
+    setCustomer(null);
   };
 
-  const filteredData = data.filter((expense) => expense.name.toLowerCase().includes(searchQuery.toLowerCase()));
+   const filteredCustomers = customers.filter(
+     (customer) =>
+       customer.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+       customer.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+       customer.customerNumber.toLowerCase().includes(searchQuery.toLowerCase())
+   );
 
-   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-   const startIndex = (currentPage - 1) * itemsPerPage;
-   const paginatedData = filteredData.slice(startIndex, startIndex + itemsPerPage);
+  const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedData = filteredCustomers.slice(startIndex, startIndex + itemsPerPage);
 
-   const handlePageChange = (page: number) => {
-     setCurrentPage(page);
-   };
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+  
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Expenses</h1>
-          <p className="text-muted-foreground">Manage your expense details.</p>
+          <h1 className="text-3xl font-bold text-foreground">Customers</h1>
+          <p className="text-muted-foreground">Manage your customers details.</p>
         </div>
         <Button className="bg-gradient-primary" onClick={() => setOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Expense
+          Add Customer
         </Button>
-        <AddExpenseDialog open={open} onOpenChange={onOpenChange} expense={expense} />
+        <AddCustomerDialog open={open} onOpenChange={onOpenChange} customer={customer} />
       </div>
 
       <Card className="shadow-card">
         <CardContent className="p-2">
           <div className="flex items-center gap-4">
-            <div className="relative flex-[6]">
+            <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search expense by reason" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
+              <Input
+                placeholder="Search customer by name, customer number"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
             </div>
-
-            <div className="flex-[2]">
-              <Input id="fromDate" type="date" placeholder="Select date" className="w-full" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
-            </div>
-
-            <div className="flex-[2]">
-              <Input id="toDate" type="date" placeholder="Select date" className="w-full" value={toDate} onChange={(e) => setToDate(e.target.value)} />
-            </div>
-
-            <div className="flex-[2]">
-              <Button variant="outline" className="w-full" onClick={fetchExpenses}>
-                Search
-              </Button>
-            </div>
+            <Button variant="outline" onClick={fetchCustomers} disabled={loading}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -145,7 +125,7 @@ const Expenses = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Expenses ({filteredData.length})
+            Customers ({filteredCustomers.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -153,9 +133,11 @@ const Expenses = () => {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Date</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Reason</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Amount</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Customer Number</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Name</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">NIC</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Contact #</th>
+                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Type</th>
                 </tr>
               </thead>
               <tbody>
@@ -175,6 +157,15 @@ const Expenses = () => {
                       <td className="py-4 px-4">
                         <Skeleton className="h-4 w-20" />
                       </td>
+                      <td className="py-4 px-4">
+                        <Skeleton className="h-4 w-12" />
+                      </td>
+                      <td className="py-4 px-4">
+                        <Skeleton className="h-4 w-16" />
+                      </td>
+                      <td className="py-4 px-4">
+                        <Skeleton className="h-6 w-20" />
+                      </td>
                     </tr>
                   ))
                 ) : error ? (
@@ -184,7 +175,7 @@ const Expenses = () => {
                       <div className="flex flex-col items-center gap-3">
                         <AlertCircle className="h-12 w-12 text-destructive" />
                         <div>
-                          <h3 className="font-medium text-foreground">Failed to load records</h3>
+                          <h3 className="font-medium text-foreground">Failed to load customers</h3>
                           {/* <p className="text-muted-foreground">{error}</p> */}
                         </div>
                       </div>
@@ -203,17 +194,22 @@ const Expenses = () => {
                     </td>
                   </tr>
                 ) : (
-                  // Expense rows
-                  paginatedData.map((expense) => (
-                    <tr key={expense.id} className="border-b border-border hover:bg-muted/50">
+                  // customer rows
+                  paginatedData.map((customer) => (
+                    <tr key={customer.id} className="border-b border-border hover:bg-muted/50">
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-3">
-                          <span className="font-medium">{expense.date}</span>
+                          <span className="font-medium">{customer.customerNumber}</span>
                         </div>
                       </td>
                       <td className="py-4 px-4 text-muted-foreground">
-                        <span>{expense.name}</span>
-                        {expense?.description && (
+                        {customer.firstName} {customer.lastName}
+                      </td>
+                      <td className="py-4 px-4 text-muted-foreground">{customer.nic}</td>
+                      <td className="py-4 px-4 text-muted-foreground">
+                        {customer.contactNumber}
+
+                        {customer?.address && (
                           <HoverCard>
                             <HoverCardTrigger asChild>
                               <Button variant="ghost" size="sm" className="h-5 w-5 p-0 ml-2">
@@ -221,12 +217,12 @@ const Expenses = () => {
                               </Button>
                             </HoverCardTrigger>
                             <HoverCardContent className="w-80">
-                              <p className="text-sm">{expense.description}</p>
+                              <p className="text-sm">{customer.address}</p>
                             </HoverCardContent>
                           </HoverCard>
                         )}
                       </td>
-                      <td className="py-4 px-4">{expense.amount}</td>
+                      <td className="py-4 px-4">{customer.isCreditCustomer && <Badge className="bg-warning text-warning-foreground">Credit</Badge>}</td>
 
                       <td className="py-4 px-4 text-right">
                         <DropdownMenu>
@@ -238,23 +234,23 @@ const Expenses = () => {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem
                               onClick={() => {
-                                setExpense(expense);
+                                setCustomer(customer);
                                 setOpen(true);
                               }}
                             >
                               <Edit className="h-4 w-4 mr-2" />
-                              Edit Expense
+                              Edit Customer
                             </DropdownMenuItem>
                             <ConfirmDialog
-                              title="Delete Expense"
-                              description="Are you sure you want to delete this expense?"
+                              title="Delete Customer"
+                              description={`Are you sure you want to delete the "${customer.customerNumber}"?`}
                               confirmText="Delete"
                               variant="destructive"
-                              onConfirm={() => onDeleteExpense(expense.id)}
+                              onConfirm={() => onDeleteCustomer(customer.id)}
                             >
                               <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>
                                 <Trash2 className="h-4 w-4 mr-2" />
-                                Delete Expense
+                                Delete Customer
                               </DropdownMenuItem>
                             </ConfirmDialog>
                           </DropdownMenuContent>
@@ -276,5 +272,5 @@ const Expenses = () => {
   );
 };
 
-export default Expenses;
+export default Customers;
 

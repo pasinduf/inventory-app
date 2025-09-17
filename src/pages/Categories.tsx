@@ -156,9 +156,9 @@ const Categories = () => {
                     <div className={`w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center`}>
                       <FolderTree className="h-6 w-6 text-white" />
                     </div>
-                    <div>
+                    <div className="flex items-center gap-2">
                       <CardTitle className="text-lg">{category.name}</CardTitle>
-                      <Badge variant="secondary" className="mt-1 text-sm">
+                      <Badge variant="secondary" className="mt-1 text-sm text-muted-foreground">
                         <Package className="h-3 w-3 mr-1" />
                         {category.productCount} products
                       </Badge>
@@ -200,24 +200,31 @@ const Categories = () => {
               <CardContent>
                 <p className="text-muted-foreground text-sm mb-4">{category.description}</p>
                 <div className="flex items-center justify-between">
-                  <CategoryProductsDialog category={category}>
-                    <Button variant="outline" size="sm">
-                      View Products
-                    </Button>
-                  </CategoryProductsDialog>
-                  <Button variant="ghost" size="sm" onClick={() => {
-                    setnewProduct({
-                      name: "",
-                      category: `${category.id}`,
-                      supplier: "",
-                      unit: "",
-                      quantity: 0,
-                      buyingPrice: 0,
-                      sellingPrice: 0,
-                    });
-                    setOpenAddProduct(true)
-                  }}
-                    >
+                  <div>
+                    {category.productCount > 0 && (
+                      <CategoryProductsDialog category={category}>
+                        <Button variant="outline" size="sm">
+                          View Products
+                        </Button>
+                      </CategoryProductsDialog>
+                    )}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setnewProduct({
+                        name: "",
+                        category: `${category.id}`,
+                        supplier: "",
+                        unit: "",
+                        quantity: 0,
+                        buyingPrice: 0,
+                        sellingPrice: 0,
+                      });
+                      setOpenAddProduct(true);
+                    }}
+                  >
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
@@ -225,11 +232,7 @@ const Categories = () => {
             </Card>
           ))
         )}
-        <AddProductDialog 
-          open={openAddProduct} 
-          onOpenChange={onOpenAddProductChange} 
-          newProduct={newProduct}
-        />
+        <AddProductDialog open={openAddProduct} onOpenChange={onOpenAddProductChange} newProduct={newProduct} />
       </div>
     </div>
   );
