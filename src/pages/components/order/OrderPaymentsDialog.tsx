@@ -4,40 +4,38 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Package,AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getOrderDetails } from "@/api/orders/getOrderDetails";
-import { getDate, getTime, yyyyMMDD } from "@/lib/dateFormatter";
+import { getCrditOrderPayments } from "@/api/payments/getCrditOrderPayments";
+import { Badge } from "@/components/ui/badge";
 
 
 interface Props {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   orderId: number;
-  orderNumber:string;
-  children: React.ReactNode;
+  customer:string;
 }
 
-const OrderDetailsDialog = ({ orderId, orderNumber, children }: Props) => {
-  const [open, setOpen] = useState(false);
-
+const OrderPaymentsDialog = ({ open, onOpenChange, orderId, customer }: Props) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [payments, setPayments] = useState(null);
   const [order, setOrder] = useState(null);
-  
-  const itemsPerPage = 5;
 
-  
+  const itemsPerPage = 5;
 
   useEffect(() => {
     if (open && orderId) {
-      fetchOrderDetails();
+      fetchInstallments();
     }
   }, [open, orderId]);
 
-  const fetchOrderDetails = async () => {
+  const fetchInstallments = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await getOrderDetails(orderId);
-      setOrder(response);
+      const response = await getCrditOrderPayments(orderId);
+      setPayments(response);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch order details");
     } finally {
@@ -45,36 +43,27 @@ const OrderDetailsDialog = ({ orderId, orderNumber, children }: Props) => {
     }
   };
 
-
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {/* <DialogTrigger asChild>{children}</DialogTrigger> */}
+      <DialogContent className="max-w-xl max-h-[80vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            Order# {orderNumber}
+            Order Payments
           </DialogTitle>
 
-          {order && (
-            <DialogDescription>
-              <div className="ml-7">
-                Date: {getDate(order.createdAt)} {getTime(order?.createdAt)}
-              </div>
-            </DialogDescription>
-          )}
+          <DialogDescription>
+            <div className="mt-1">{customer}</div>
+          </DialogDescription>
         </DialogHeader>
 
         <ScrollArea className="max-h-[60vh]">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>SKU</TableHead>
-                <TableHead className="text-right">Price</TableHead>
-                <TableHead className="text-right">Quantity</TableHead>
-                <TableHead className="text-right">Discount</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
+                <TableHead className="text-left">Date</TableHead>
+                <TableHead className="text-left">Amount</TableHead>
+                <TableHead className="text-left">Type</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -94,15 +83,6 @@ const OrderDetailsDialog = ({ orderId, orderNumber, children }: Props) => {
                     <TableCell className="py-4 px-4">
                       <Skeleton className="h-4 w-20" />
                     </TableCell>
-                    <TableCell className="py-4 px-4">
-                      <Skeleton className="h-4 w-12" />
-                    </TableCell>
-                    <TableCell className="py-4 px-4">
-                      <Skeleton className="h-4 w-16" />
-                    </TableCell>
-                    <TableCell className="py-4 px-4">
-                      <Skeleton className="h-6 w-20" />
-                    </TableCell>
                   </TableRow>
                 ))
               ) : error ? (
@@ -112,12 +92,12 @@ const OrderDetailsDialog = ({ orderId, orderNumber, children }: Props) => {
                     <div className="flex flex-col items-center gap-3">
                       <AlertCircle className="h-12 w-12 text-destructive" />
                       <div>
-                        <h3 className="font-medium text-foreground">Failed to load products</h3>
+                        <h3 className="font-medium text-foreground">Failed to load payments</h3>
                       </div>
                     </div>
                   </TableCell>
                 </TableRow>
-              ) : order.orderItems?.length === 0 ? (
+              ) : payments?.length === 0 ? (
                 // Empty state
                 <TableRow>
                   <TableCell colSpan={8} className="py-12 text-center">
@@ -125,35 +105,26 @@ const OrderDetailsDialog = ({ orderId, orderNumber, children }: Props) => {
                       <Package className="h-12 w-12 text-muted-foreground" />
                       <div>
                         <h3 className="font-medium text-foreground">No records found</h3>
-                        {/* <p className="text-muted-foreground">{searchQuery ? "Try adjusting your search terms" : "No products available at the moment"}</p> */}
                       </div>
                     </div>
                   </TableCell>
                 </TableRow>
               ) : (
-                // Product rows
+                // payment rows
                 <>
-                  {order.orderItems?.map((item) => (
+                  {payments?.map((item) => (
                     <TableRow key={item.serialNumber}>
-                      <TableCell className="text-muted-foreground">{item.productName}</TableCell>
-                      <TableCell className="text-muted-foreground">{item.serialNumber}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1 text-muted-foreground">{item.price}</div>
-                      </TableCell>
-                      <TableCell className="text-right text-muted-foreground">
-                        {item.quantity}
-                        <span className="text-sm ml-1">/ {item.unit}</span>
-                      </TableCell>
-                      <TableCell className="text-right text-muted-foreground">
-                        <div className="flex items-center justify-end gap-1">{item.discount}</div>
-                      </TableCell>
-                      <TableCell className="text-right text-muted-foreground">
-                        <div className="flex items-center justify-end gap-1">{item.amount}</div>
+                      <TableCell className="text-muted-foreground">{item.date}</TableCell>
+                      <TableCell className="text-muted-foreground">{item.amount}</TableCell>
+                      <TableCell className="text-left">
+                        <Badge className={`${item.type === "Installment" ? "bg-success text-success-foreground" : "bg-warning text-warning-foreground"}`}>
+                          {item.type}
+                        </Badge>
                       </TableCell>
                     </TableRow>
                   ))}
 
-                  {order && (
+                  {/* {order && (
                     <TableRow>
                       <TableCell>Total</TableCell>
                       <TableCell colSpan={2}></TableCell>
@@ -161,7 +132,7 @@ const OrderDetailsDialog = ({ orderId, orderNumber, children }: Props) => {
                       <TableCell className="text-right text-muted-foreground">{order.discount}</TableCell>
                       <TableCell className="text-right">{order.netAmount}</TableCell>
                     </TableRow>
-                  )}
+                  )} */}
                 </>
               )}
             </TableBody>
@@ -172,4 +143,4 @@ const OrderDetailsDialog = ({ orderId, orderNumber, children }: Props) => {
   );
 };
 
-export default OrderDetailsDialog;
+export default OrderPaymentsDialog;

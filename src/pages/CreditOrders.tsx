@@ -2,15 +2,18 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus,  Package, AlertCircle,View, Info } from "lucide-react";
+import { Search, Plus,  Package, AlertCircle,View, Info, MoreHorizontal, Edit, ArrowBigRightDash, ArrowRight, PlusIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { yyyyMMDD } from "@/lib/dateFormatter";
 import { PaginationWrapper } from "@/components/PaginationWrapper";
-import { getOrders } from "@/api/orders/getOrders";
 import { Badge } from "@/components/ui/badge";
 import { getCrditOrders } from "@/api/orders/getCrditOrders";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import OrderDetailsDialog from "./components/order/OrderDetailsDialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import OrderPaymentsDialog from "./components/order/OrderPaymentsDialog";
+import { AddPaymentDialog } from "./components/payment/AddPaymentDialog";
 
 const CreditOrders = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -21,6 +24,11 @@ const CreditOrders = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [openView, setOpenView] = useState(false);
+  const [openAdd, setOpenAdd] = useState(false);
+  const [order, setOrder] = useState(null);
+
   const itemsPerPage = 5;
 
   useEffect(() => {
@@ -57,6 +65,16 @@ const CreditOrders = () => {
     }
   };
 
+
+  const onOpenChangeView = (open: boolean) => {
+    setOpenView(open);
+  };
+
+  const onOpenChangeAdd = (refresh:boolean,open: boolean) => {
+    setOpenAdd(open);
+    if (refresh) fetchOrders();
+  };
+
   const filteredData = data?.filter((order) => order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()));
 
   const totalPages = Math.ceil(filteredData?.length / itemsPerPage);
@@ -66,6 +84,7 @@ const CreditOrders = () => {
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
+
 
   return (
     <div className="space-y-4">
@@ -110,53 +129,61 @@ const CreditOrders = () => {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Date</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Order #</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Customer</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Amount</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Down Payment</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Balance</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table className="w-full">
+              <TableHeader>
+                <TableRow className="border-b border-border">
+                  <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">Date</TableHead>
+                  <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">Order #</TableHead>
+                  <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">Customer</TableHead>
+                  <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">Amount</TableHead>
+                  <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">Down Payment</TableHead>
+                  <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">Balance</TableHead>
+                  <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">Status</TableHead>
+                  <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">Actions</TableHead>
+                  <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {loading ? (
                   // Loading skeleton rows
                   Array.from({ length: itemsPerPage }).map((_, index) => (
-                    <tr key={index} className="border-b border-border">
-                      <td className="py-4 px-4">
+                    <TableRow key={index} className="border-b border-border">
+                      <TableCell className="py-4 px-4">
                         <div className="flex items-center gap-3">
                           <Skeleton className="w-10 h-10 rounded-lg" />
                           <Skeleton className="h-4 w-48" />
                         </div>
-                      </td>
-                      <td className="py-4 px-4">
+                      </TableCell>
+                      <TableCell className="py-4 px-4">
                         <Skeleton className="h-4 w-16" />
-                      </td>
-                      <td className="py-4 px-4">
+                      </TableCell>
+                      <TableCell className="py-4 px-4">
                         <Skeleton className="h-4 w-20" />
-                      </td>
-                      <td className="py-4 px-4">
+                      </TableCell>
+                      <TableCell className="py-4 px-4">
                         <Skeleton className="h-4 w-20" />
-                      </td>
-                      <td className="py-4 px-4">
+                      </TableCell>
+                      <TableCell className="py-4 px-4">
                         <Skeleton className="h-4 w-20" />
-                      </td>
-                      <td className="py-4 px-4">
+                      </TableCell>
+                      <TableCell className="py-4 px-4">
                         <Skeleton className="h-4 w-20" />
-                      </td>
-                      <td className="py-4 px-4">
+                      </TableCell>
+                      <TableCell className="py-4 px-4">
                         <Skeleton className="h-4 w-20" />
-                      </td>
-                    </tr>
+                      </TableCell>
+                      <TableCell className="py-4 px-4">
+                        <Skeleton className="h-4 w-20" />
+                      </TableCell>
+                      <TableCell className="py-4 px-4">
+                        <Skeleton className="h-4 w-20" />
+                      </TableCell>
+                    </TableRow>
                   ))
                 ) : error ? (
                   // Error state
-                  <tr>
-                    <td colSpan={8} className="py-12 text-center">
+                  <TableRow>
+                    <TableCell colSpan={8} className="py-12 text-center">
                       <div className="flex flex-col items-center gap-3">
                         <AlertCircle className="h-12 w-12 text-destructive" />
                         <div>
@@ -164,40 +191,40 @@ const CreditOrders = () => {
                           {/* <p className="text-muted-foreground">{error}</p> */}
                         </div>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ) : paginatedData?.length === 0 ? (
                   // Empty state
-                  <tr>
-                    <td colSpan={8} className="py-12 text-center">
+                  <TableRow>
+                    <TableCell colSpan={8} className="py-12 text-center">
                       <div className="flex flex-col items-center gap-3">
                         <Package className="h-12 w-12 text-muted-foreground" />
                         <div>
                           <h3 className="font-medium text-foreground">No records found</h3>
                         </div>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ) : (
                   // order rows
                   paginatedData?.map((order) => (
-                    <tr key={order.id} className="border-b border-border hover:bg-muted/50">
-                      <td className="py-4 px-4">
+                    <TableRow key={order.id} className="border-b border-border hover:bg-muted/50">
+                      <TableCell className="py-4 px-4">
                         <div className="flex items-center gap-3">
                           <span className="font-medium text-muted-foreground">{order.date}</span>
                         </div>
-                      </td>
-                      <td className="py-4 px-4 cursor-pointer">
+                      </TableCell>
+                      <TableCell className="py-4 px-4 cursor-pointer">
                         <OrderDetailsDialog orderId={order.orderId} orderNumber={order.orderNumber}>
                           <Button variant="outline" size="sm">
                             {order.orderNumber}
                           </Button>
                         </OrderDetailsDialog>
-                      </td>
-                      <td className="py-4 px-4 text-muted-foreground">{order.customer}</td>
-                      <td className="py-4 px-4 text-muted-foreground">{order.amount}</td>
-                      <td className="py-4 px-4 text-muted-foreground">{order.downPayment}</td>
-                      <td className="py-4 px-4 text-muted-foreground">
+                      </TableCell>
+                      <TableCell className="py-4 px-4 text-muted-foreground">{order.customer}</TableCell>
+                      <TableCell className="py-4 px-4 text-muted-foreground">{order.amount}</TableCell>
+                      <TableCell className="py-4 px-4 text-muted-foreground">{order.downPayment}</TableCell>
+                      <TableCell className="py-4 px-4 text-muted-foreground">
                         {order.remaining}
 
                         <HoverCard>
@@ -208,32 +235,65 @@ const CreditOrders = () => {
                           </HoverCardTrigger>
                           <HoverCardContent className="w-auto">
                             <div>
-                              <div>Start Date: {order.startDate}</div>
-                              <div>End Date: {order.endDate}</div>
-                              <div>Period: {order.period} DAYS</div>
-                              <div>Installment: {order.installmentAmount}</div>
+                              <div className="text-muted-foreground">Start Date: {order.startDate}</div>
+                              <div className="text-muted-foreground">End Date: {order.endDate}</div>
+                              <div className="text-muted-foreground">Period: {order.period} DAYS</div>
+                              <div className="text-muted-foreground">Installment: {order.installmentAmount}</div>
                             </div>
                           </HoverCardContent>
                         </HoverCard>
-                      </td>
-                      <td className="text-center">
+                      </TableCell>
+                      <TableCell className="text-left">
                         {order.isCompleted ? (
                           <Badge className="bg-success text-success-foreground">Completed</Badge>
                         ) : (
                           <Badge className="bg-warning text-warning-foreground">Active</Badge>
                         )}
-                      </td>
+                      </TableCell>
 
-                      <td className="py-4 px-4 text-right">
-                        <Button variant="ghost" size="sm" className="h-5 w-5 p-0 ml-2">
-                          <View className="h-3 w-3 text-muted-foreground" />
+                      <TableCell className="text-left">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setOrder(order);
+                                setOpenAdd(true);
+                              }}
+                            >
+                              <PlusIcon className="h-4 w-4 mr-2" />
+                              Add Payment
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setOrder(order);
+                                setOpenView(true);
+                              }}
+                            >
+                              <Package className="h-4 w-4 mr-2" />
+                              View Payments
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+
+                      <TableCell className="py-4 px-4 text-right">
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <ArrowRight className="h-3 w-3 text-muted-foreground" />
                         </Button>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
+
+            <OrderPaymentsDialog orderId={order?.id} customer={order?.customer} open={openView} onOpenChange={onOpenChangeView} />
+            <AddPaymentDialog orderId={order?.id} customer={order?.customer} open={openAdd} onOpenChange={onOpenChangeAdd} />
           </div>
 
           {!loading && !error && paginatedData?.length > 0 && (
