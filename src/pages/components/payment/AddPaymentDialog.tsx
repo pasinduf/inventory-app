@@ -12,10 +12,11 @@ import { yyyyMMDD } from "@/lib/dateFormatter";
 import { CreditOrderPayment } from "@/entries/payment/payment";
 import { updatePayment } from "@/api/payments/updatePayment";
 import { addPayment } from "@/api/payments/addPayment";
+import { CreditOrder } from "@/entries/order/order";
 
 interface Props {
-  orderId:number;
-  customer:string;
+  order: CreditOrder;
+  customer: string;
   open: boolean;
   onOpenChange: (refresh: boolean, open: boolean) => void;
   payment?: CreditOrderPayment;
@@ -29,7 +30,7 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-export function AddPaymentDialog({ orderId, customer,open, onOpenChange, payment }: Props) {
+export function AddPaymentDialog({ order, customer,open, onOpenChange, payment }: Props) {
   const { toast } = useToast();
   const [submitting, setSubmitting] = useState(false);
   const today = new Date();
@@ -41,13 +42,13 @@ export function AddPaymentDialog({ orderId, customer,open, onOpenChange, payment
     reset,
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { date: yyyyMMDD(today), amount: 0, orderId },
+    defaultValues: { date: yyyyMMDD(today), amount: 0, orderId: order?.id },
     mode: "onSubmit",
   });
 
   useEffect(() => {
     if (open) {
-      reset(payment ?? { date: yyyyMMDD(today), amount: 0, orderId });
+      reset(payment ?? { date: yyyyMMDD(today), amount: 0, orderId: order?.id });
     }
   }, [payment, open, reset]);
 
@@ -56,12 +57,12 @@ export function AddPaymentDialog({ orderId, customer,open, onOpenChange, payment
     const payload: any = { ...data };
 
     try {
-      const result = payment ? await updatePayment(orderId, payload) : await addPayment(payload);
+      const result = payment ? await updatePayment(order.id, payload) : await addPayment(payload);
       if (result) {
         onOpenChange(true, false);
         toast({
           variant: "success",
-          title: `Payment ${orderId ? "Updated" : "Added"} Successfully`,
+          title: `Payment ${payment ? "Updated" : "Added"} Successfully`,
         });
       }
     } catch (error: any) {
@@ -112,8 +113,10 @@ export function AddPaymentDialog({ orderId, customer,open, onOpenChange, payment
                 placeholder="Enter Amount"
                 {...register("amount", { valueAsNumber: true })}
                 min={0}
+                step="any"
                 onFocus={(e) => e.target.select()}
               />
+              <p className="text-muted-foreground">Installment: {order?.installmentAmount}</p>
             </div>
           </div>
           <DialogFooter>

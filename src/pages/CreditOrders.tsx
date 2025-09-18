@@ -293,7 +293,7 @@ const CreditOrders = () => {
             </Table>
 
             <OrderPaymentsDialog orderId={order?.id} customer={order?.customer} open={openView} onOpenChange={onOpenChangeView} />
-            <AddPaymentDialog orderId={order?.id} customer={order?.customer} open={openAdd} onOpenChange={onOpenChangeAdd} />
+            <AddPaymentDialog order={order} customer={order?.customer} open={openAdd} onOpenChange={onOpenChangeAdd} />
           </div>
 
           {!loading && !error && paginatedData?.length > 0 && (

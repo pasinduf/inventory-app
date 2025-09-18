@@ -114,7 +114,7 @@ export function AddSupplierDialog({ open, onOpenChange, supplier }: Props) {
 
             <div className="grid gap-2">
               <Label htmlFor="address">Address</Label>
-              <Textarea id="address" placeholder="Contact Number" {...register("address")} rows={3} />
+              <Textarea id="address" placeholder="Address" {...register("address")} rows={3} />
             </div>
           </div>
           <DialogFooter>

@@ -9,27 +9,29 @@ import { useForm } from "react-hook-form";
 import { DEFAULT_ERROR_MESSAGE } from "@/api/const";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
-import { Expense } from "@/entries/expense/expense";
-import { updateExpense } from "@/api/expense/updateExpense";
-import { addExpense } from "@/api/expense/addExpense";
 import { yyyyMMDD } from "@/lib/dateFormatter";
+import { Wastage } from "@/entries/product/wastage";
+import { updateWastage } from "@/api/product/updateWastage";
+import { addWastage } from "@/api/product/addWastage";
 
 interface Props {
+  lotId:number,
   open: boolean;
   onOpenChange: (refresh: boolean, open: boolean) => void;
-  expense?: Expense;
+  wastage?: Wastage;
 }
 
 const schema = z.object({
   date: z.string().min(1, "Date is required"),
-  name: z.string().min(1, "Reason is required"),
-  amount: z.number().min(0, "Amount must be positive"),
-  description: z.string().optional(),
+  reason: z.string().min(1, "Reason is required"),
+  quantity: z.number().min(0, "Quantity must be positive"),
+  lotId: z.number().min(0, ""),
 });
 
 type FormData = z.infer<typeof schema>;
 
-export function AddExpenseDialog({ open, onOpenChange, expense }: Props) {
+export function AddWastageDialog({lotId, open, onOpenChange, wastage }: Props) {
+
   const { toast } = useToast();
   const [submitting, setSubmitting] = useState(false);
   const today = new Date();
@@ -41,27 +43,27 @@ export function AddExpenseDialog({ open, onOpenChange, expense }: Props) {
     reset,
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { name: "", date: yyyyMMDD(today), amount: 0, description: "" },
+    defaultValues: { lotId, reason: "", date: yyyyMMDD(today), quantity: 0 },
     mode: "onSubmit",
   });
 
   useEffect(() => {
     if (open) {
-      reset(expense ?? { name: "", date: yyyyMMDD(today), amount: 0, description: "" });
+      reset(wastage ?? { lotId, reason: "", date: yyyyMMDD(today), quantity: 0 });
     }
-  }, [expense, open, reset]);
+  }, [wastage, open, reset]);
 
   const onSubmit = async (data: FormData) => {
     setSubmitting(true);
     const payload: any = { ...data };
 
     try {
-      const result = expense ? await updateExpense(expense.id, payload) : await addExpense(payload);
+      const result = wastage ? await updateWastage(wastage.id, payload) : await addWastage(payload);
       if (result) {
         onOpenChange(true, false);
         toast({
           variant: "success",
-          title: `Expense ${expense ? "Updated" : "Added"} Successfully`,
+          title: `Wastage ${wastage ? "Updated" : "Added"} Successfully`,
         });
       }
     } catch (error: any) {
@@ -91,7 +93,7 @@ export function AddExpenseDialog({ open, onOpenChange, expense }: Props) {
     >
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{expense ? "Edit" : "Add New"} Expense</DialogTitle>
+          <DialogTitle>{wastage ? "Edit" : "Add New"} Wastage</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid gap-6 py-4">
@@ -102,27 +104,22 @@ export function AddExpenseDialog({ open, onOpenChange, expense }: Props) {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="name">Reason</Label>
-              <Input id="name" placeholder="Enter reason" {...register("name")} />
-              {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
+              <Label htmlFor="reason">Reason</Label>
+              <Textarea id="reason" placeholder="Reason" {...register("reason")} rows={3} />
+              {errors.reason && <p className="text-red-500 text-sm">{errors.reason.message}</p>}
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="description">Amount</Label>
+              <Label htmlFor="quantity">Quantity</Label>
               <Input
-                id="amount"
+                id="quantity"
                 type="number"
-                placeholder="Enter Amount"
-                {...register("amount", { valueAsNumber: true })}
+                placeholder="Enter Quantity"
+                {...register("quantity", { valueAsNumber: true })}
                 min={0}
                 step="any"
                 onFocus={(e) => e.target.select()}
               />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea id="description" placeholder="Note" {...register("description")} rows={3} />
             </div>
           </div>
           <DialogFooter>
@@ -130,7 +127,7 @@ export function AddExpenseDialog({ open, onOpenChange, expense }: Props) {
               Cancel
             </Button>
             <Button type="submit" disabled={submitting}>
-              {expense ? "Edit" : "Add"} Expense
+              {wastage ? "Edit" : "Add"} Wastage
             </Button>
           </DialogFooter>
         </form>

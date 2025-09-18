@@ -15,9 +15,11 @@ import ConfirmDialog from "@/components/ui/confirm-dialog";
 import { deleteProduct } from "@/api/product/deleteProduct";
 import { useToast } from "@/hooks/use-toast";
 import { DEFAULT_ERROR_MESSAGE } from "@/api/const";
+import { useNavigate } from "react-router-dom";
 
 const Products = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [products,setProducts] = useState([]);
@@ -272,7 +274,7 @@ const Products = () => {
                               <Edit className="h-4 w-4 mr-2" />
                               Edit Product
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => navigate(`/update-stock/${product.id}`)}>
                               <Package className="h-4 w-4 mr-2" />
                               Update Stock
                             </DropdownMenuItem>

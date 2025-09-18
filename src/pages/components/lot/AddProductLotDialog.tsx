@@ -1,110 +1,94 @@
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useToast } from "@/hooks/use-toast";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { getCategoryOptions } from "@/api/category/getOptions";
-import { getSupplierOptions } from "@/api/supplier/getOptions";
-import { Label } from "@/components/ui/label";
-import { ProductInputs } from "@/entries/product/product";
-import { addProduct } from "@/api/product/addProduct";
+import { useForm } from "react-hook-form";
 import { DEFAULT_ERROR_MESSAGE } from "@/api/const";
-import { Category } from "@/entries/category/category";
+import { useToast } from "@/hooks/use-toast";
+import { Label } from "@/components/ui/label";
+import { yyyyMMDD } from "@/lib/dateFormatter";
+import { ProductLot } from "@/entries/product/product-lot";
+import { updateProductLot } from "@/api/product/updateProductLot";
+import { addProductLot } from "@/api/product/addProductLot";
+import { getSupplierOptions } from "@/api/supplier/getOptions";
 
-const Schema = z.object({
-  name: z.string().min(1, "Product name is required"),
-  category: z.string().min(1, "Category is required"),
-  supplier: z.string().min(1, "Supplier is required"),
-  unit: z.string().min(1, "Unit is required"),
+interface Props {
+  productId:number;
+  open: boolean;
+  onOpenChange: (refresh: boolean, open: boolean) => void;
+  lot?: ProductLot;
+}
+
+const schema = z.object({
+  date: z.string().min(1, "Date is required"),
+  supplierId: z.string().min(1, "Supplier is required"),
   quantity: z.number().min(0, "Quantity must be positive"),
   buyingPrice: z.number().min(0, "Price must be positive"),
   sellingPrice: z.number().min(0, "Price must be positive"),
 });
 
-type FormData = z.infer<typeof Schema>;
+type FormData = z.infer<typeof schema>;
 
-interface Props {
-  open: boolean;
-  onOpenChange: (refresh: boolean, open: boolean) => void;
-  newProduct?: any;
-}
-
-export function AddProductDialog({ open, onOpenChange, newProduct }: Props) {
+export function AddProductLotDialog({ productId , open, onOpenChange, lot }: Props) {
+  
   const { toast } = useToast();
-  const [categories, setCategories] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const today = new Date();
 
   const defaultValue = {
-    name: "",
-    category: "",
-    supplier: "",
-    unit: "",
+    date: yyyyMMDD(today),
+    supplierId: "",
     quantity: 0,
     buyingPrice: 0,
     sellingPrice: 0,
   };
+
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
   } = useForm<FormData>({
-    resolver: zodResolver(Schema),
+    resolver: zodResolver(schema),
     defaultValues: defaultValue,
     mode: "onSubmit",
   });
 
+
   useEffect(() => {
     const fetchOptions = async () => {
       try {
-        const [categories, suppliers] = await Promise.all([getCategoryOptions(), getSupplierOptions()]);
+        const suppliers = await getSupplierOptions();
 
-        setCategories(categories);
         setSuppliers(suppliers);
       } catch (error) {
-        console.error("Failed to fetch options:", error);
+        console.error("Failed to fetch supplies:", error);
       }
     };
     fetchOptions();
-  }, []);
+  }, [open]);
 
   useEffect(() => {
-    if (open && newProduct) {
-      reset(newProduct ?? defaultValue);
+    if (open) {
+      reset(lot ?? defaultValue);
     }
-  }, [newProduct, open, reset]);
+  }, [lot, open, reset]);
 
   const onSubmit = async (data: FormData) => {
     setSubmitting(true);
-    const payload: ProductInputs = {
-      supplierId: +data.supplier,
-      categoryId: +data.category,
-      name: data.name,
-      unit: data.unit,
-      quantity: data.quantity,
-      buyingPrice: data.buyingPrice,
-      sellingPrice: data.sellingPrice,
-    };
+    const payload: any = { ...data, productId };
 
     try {
-      const result = await addProduct(payload);
+      const result = lot ? await updateProductLot(lot.id, payload) : await addProductLot(payload);
       if (result) {
+        onOpenChange(true, false);
         toast({
           variant: "success",
-          title: `Product Added Successfully`,
+          title: `Product lot ${lot ? "Updated" : "Added"} Successfully`,
         });
-        onOpenChange(true, false);
       }
     } catch (error: any) {
       toast({
@@ -133,19 +117,18 @@ export function AddProductDialog({ open, onOpenChange, newProduct }: Props) {
     >
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New Product</DialogTitle>
-          <DialogDescription>Create a new product for your inventory.</DialogDescription>
+          <DialogTitle>{lot ? "Update" : "Add"} Product Lot</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid gap-8 py-4">
             <div className="grid gap-2">
               <Label htmlFor="name">Select Supplier</Label>
               <select
-                id="supplier"
-                name="supplier"
+                id="supplierId"
+                name="supplierId"
                 className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 defaultValue=""
-                {...register("supplier")}
+                {...register("supplierId")}
               >
                 <option value="" disabled>
                   Select Supplier
@@ -158,56 +141,14 @@ export function AddProductDialog({ open, onOpenChange, newProduct }: Props) {
                   );
                 })}
               </select>
-              {errors.supplier && <p className="text-red-500 text-sm">{errors.supplier.message}</p>}
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="name">Select Category</Label>
-              <select
-                id="category"
-                name="category"
-                className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                defaultValue=""
-                {...register("category")}
-                disabled={!!newProduct}
-              >
-                <option value="" disabled>
-                  Select Category
-                </option>
-                {categories.map((category) => {
-                  return (
-                    <option key={category.value} value={category.value}>
-                      {category.name}
-                    </option>
-                  );
-                })}
-              </select>
-              {errors.category && <p className="text-red-500 text-sm">{errors.category.message}</p>}
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="name">Product Name</Label>
-              <Input id="name" placeholder="Enter product name" {...register("name")} />
-              {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
+              {errors.supplierId && <p className="text-red-500 text-sm">{errors.supplierId.message}</p>}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="name">Select Unit</Label>
-                <select
-                  id="unit"
-                  name="unit"
-                  className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  defaultValue=""
-                  {...register("unit")}
-                >
-                  <option value="" disabled>
-                    Select Unit
-                  </option>
-                  <option value="PCS">PCS</option>
-                  <option value="KG">KG</option>
-                </select>
-                {errors.unit && <p className="text-red-500 text-sm">{errors.unit.message}</p>}
+                <Label htmlFor="date">Date</Label>
+                <Input id="date" type="date" placeholder="Select date" {...register("date")} />
+                {errors.date && <p className="text-red-500 text-sm">{errors.date.message}</p>}
               </div>
 
               <div className="grid gap-2">
@@ -255,12 +196,12 @@ export function AddProductDialog({ open, onOpenChange, newProduct }: Props) {
               </div>
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="mt-2">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
             <Button type="submit" disabled={submitting}>
-              Add Product
+              {lot ? "Update" : "Add"} Lot
             </Button>
           </DialogFooter>
         </form>
