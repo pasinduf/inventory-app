@@ -22,6 +22,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import logo from "/logo.jpeg"; 
 
 const mainItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
@@ -65,9 +66,10 @@ export function AdminSidebar() {
           {!collapsed ? (
             <div className="flex items-center gap-2">
               <div className="h-8 w-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                <Package className="h-4 w-4 text-white" />
+                <img src={logo} alt="App Logo" className="h-10 w-10" />
+                {/* <Package className="h-4 w-4 text-white" /> */}
               </div>
-              <span className="font-bold text-lg">StockPro</span>
+              <span className="font-bold text-lg">11.11</span>
             </div>
           ) : (
             <div className="flex justify-center">

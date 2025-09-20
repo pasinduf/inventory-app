@@ -26,9 +26,50 @@ export class CreditOrder {
 }
 
 
-export interface OrderInputs {
+export class OrderInputs {
   date: string;
+  isCreditOrder: boolean;
+  orderDiscount: number;
+  items: OrderItem[];
+  customerId?:number;
+  credit?: Credit;
+}
+
+export class OrderItem {
+  productId: number;
+  productLotId: number;
+  quantity: number;
+  discount: number;
+} 
+
+export class Credit {
+  startDate: string;
+  downPayment: number;
+  period: number;
+  installmentAmount: number;
+} 
+
+export class CreateOrderResponse {
+  status: boolean;
+  message: string;
+  order: OrderResponse;
+}
+
+export class OrderResponse {
+  id: number;
+  orderNumber: string;
+  createdAt: string;
+  orderItems: OrderItemResponse[];
+  grossAmount: number;
+  discount: number;
+  netAmount: number;
+}
+
+export class OrderItemResponse {
+  serialNumber: string;
   name: string;
-  amount?: number;
-  description?: string;
+  price: number;
+  quantity: number;
+  discount: number;
+  amount: number;
 }

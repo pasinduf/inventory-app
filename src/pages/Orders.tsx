@@ -10,8 +10,11 @@ import { PaginationWrapper } from "@/components/PaginationWrapper";
 import { getOrders } from "@/api/orders/getOrders";
 import { Badge } from "@/components/ui/badge";
 import OrderDetailsDialog from "./components/order/OrderDetailsDialog";
+import { useNavigate } from "react-router-dom";
 
 const Orders = () => {
+
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -67,6 +70,8 @@ const Orders = () => {
     setCurrentPage(page);
   };
 
+
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -74,10 +79,10 @@ const Orders = () => {
           <h1 className="text-3xl font-bold text-foreground">Orders</h1>
           <p className="text-muted-foreground">Manage your order details.</p>
         </div>
-        <Button className="bg-gradient-primary">
+        {/* <Button className="bg-gradient-primary" onClick={() => navigate("/order/new")}>
           <Plus className="h-4 w-4 mr-2" />
           Add Order
-        </Button>
+        </Button> */}
       </div>
 
       <Card className="shadow-card">

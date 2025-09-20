@@ -4,7 +4,7 @@ export class ProductLot {
   quantity: number;
   buyingPrice: number;
   sellingPrice: number;
-  supplier:Supplier;
+  supplier?:Supplier;
 }
 
 export class Supplier {

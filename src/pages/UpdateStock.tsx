@@ -25,7 +25,7 @@ interface Lot {
   quantity: number;
 }
 
-export default function UpdateStockPage() {
+const UpdateStock = () => {
   
   const { productId } = useParams<{ productId: string }>();
   const { toast } = useToast();
@@ -351,3 +351,5 @@ export default function UpdateStockPage() {
     </div>
   );
 }
+
+export default UpdateStock;

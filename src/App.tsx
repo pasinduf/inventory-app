@@ -15,7 +15,9 @@ import Expenses from "./pages/Expenses";
 import Customers from "./pages/Customers";
 import Orders from "./pages/Orders";
 import CreditOrders from "./pages/CreditOrders";
-import UpdateStockPage from "./pages/UpdateStock";
+import UpdateStock from "./pages/UpdateStock";
+import NewOrder from "./pages/NewOrder";
+import { LogoOverlay } from "./components/ui/overlay";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +27,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        {/* <LogoOverlay /> */}
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
@@ -37,11 +40,12 @@ const App = () => (
                     <Route path="/suppliers" element={<Suppliers />} />
                     <Route path="/categories" element={<Categories />} />
                     <Route path="/products" element={<Products />} />
-                    <Route path="/update-stock/:productId" element={<UpdateStockPage />} />
+                    <Route path="/update-stock/:productId" element={<UpdateStock />} />
                     <Route path="/expenses" element={<Expenses />} />
                     <Route path="/customers" element={<Customers />} />
                     <Route path="/orders" element={<Orders />} />
                     <Route path="/credit-orders" element={<CreditOrders />} />
+                    <Route path="/order/new" element={<NewOrder />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>

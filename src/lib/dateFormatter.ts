@@ -1,4 +1,4 @@
-import { format, parseISO } from "date-fns";
+import { addDays, format, parseISO } from "date-fns";
 
 export function yyyyMMDD(date: Date) {
    const year = date.getFullYear();
@@ -15,4 +15,11 @@ export function getDate(date: string) {
 export function getTime(date: string) {
    const dateObj = parseISO(date);
    return format(dateObj, "HH:mm:ss");
+}
+
+
+
+export function addDaysToDate(date: Date, days: number): Date {
+  const result = new Date(date);
+  return addDays(result, days);;
 }
