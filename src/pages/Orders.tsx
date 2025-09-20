@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus,  Package, AlertCircle,View } from "lucide-react";
+import { Search, Plus,  Package, AlertCircle,View, EyeIcon, List } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { yyyyMMDD } from "@/lib/dateFormatter";
@@ -199,7 +199,7 @@ const Orders = () => {
                       <td className="py-4 px-4 text-right">
                         <OrderDetailsDialog orderId={order.id} orderNumber={order.orderNumber}>
                           <Button variant="ghost" size="sm" className="h-5 w-5 p-0 ml-2">
-                            <View className="h-3 w-3 text-muted-foreground" />
+                            <List className="h-3 w-3 text-muted-foreground" />
                           </Button>
                         </OrderDetailsDialog>
                       </td>

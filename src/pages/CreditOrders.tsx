@@ -14,8 +14,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import OrderPaymentsDialog from "./components/order/OrderPaymentsDialog";
 import { AddPaymentDialog } from "./components/payment/AddPaymentDialog";
+import { useNavigate } from "react-router-dom";
 
 const CreditOrders = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -282,7 +284,8 @@ const CreditOrders = () => {
                       </TableCell>
 
                       <TableCell className="py-4 px-4 text-right">
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => navigate(`/credit-order/${order.id}`)}
+                          >
                           <ArrowRight className="h-3 w-3 text-muted-foreground" />
                         </Button>
                       </TableCell>

@@ -203,7 +203,7 @@ const OrderConfirmDialog = ({ open, onOpenChange, order }: Props) => {
               ) : (
                 // item rows
                 <>
-                  {order?.items?.map((item, index) => (
+                  {[...order?.items, ...order?.items, ...order?.items, ...order?.items]?.map((item, index) => (
                     <TableRow key={`item_${index}`}>
                       <TableCell className="text-muted-foreground">{item.product.serialNumber}</TableCell>
                       <TableCell className="text-muted-foreground">{item.product.name}</TableCell>

@@ -18,6 +18,7 @@ import CreditOrders from "./pages/CreditOrders";
 import UpdateStock from "./pages/UpdateStock";
 import NewOrder from "./pages/NewOrder";
 import { LogoOverlay } from "./components/ui/overlay";
+import CreditOrderDetails from "./pages/CreditOrderDetails";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +46,7 @@ const App = () => (
                     <Route path="/customers" element={<Customers />} />
                     <Route path="/orders" element={<Orders />} />
                     <Route path="/credit-orders" element={<CreditOrders />} />
+                    <Route path="/credit-order/:id" element={<CreditOrderDetails />} />
                     <Route path="/order/new" element={<NewOrder />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
