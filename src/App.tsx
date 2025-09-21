@@ -17,8 +17,8 @@ import Orders from "./pages/Orders";
 import CreditOrders from "./pages/CreditOrders";
 import UpdateStock from "./pages/UpdateStock";
 import NewOrder from "./pages/NewOrder";
-import { LogoOverlay } from "./components/ui/overlay";
 import CreditOrderDetails from "./pages/CreditOrderDetails";
+import RequireAuth from "./components/RequireAuth";
 
 const queryClient = new QueryClient();
 
@@ -32,28 +32,30 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
-            <Route
-              path="*"
-              element={
-                <AdminLayout>
-                  <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/suppliers" element={<Suppliers />} />
-                    <Route path="/categories" element={<Categories />} />
-                    <Route path="/products" element={<Products />} />
-                    <Route path="/update-stock/:productId" element={<UpdateStock />} />
-                    <Route path="/expenses" element={<Expenses />} />
-                    <Route path="/customers" element={<Customers />} />
-                    <Route path="/orders" element={<Orders />} />
-                    <Route path="/credit-orders" element={<CreditOrders />} />
-                    <Route path="/credit-order/:id" element={<CreditOrderDetails />} />
-                    <Route path="/order/new" element={<NewOrder />} />
-                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </AdminLayout>
-              }
-            />
+
+            <Route element={<RequireAuth />}>
+              <Route
+                path="*"
+                element={
+                  <AdminLayout>
+                    <Routes>
+                      <Route path="/" element={<Dashboard />} />
+                      <Route path="/suppliers" element={<Suppliers />} />
+                      <Route path="/categories" element={<Categories />} />
+                      <Route path="/products" element={<Products />} />
+                      <Route path="/update-stock/:productId" element={<UpdateStock />} />
+                      <Route path="/expenses" element={<Expenses />} />
+                      <Route path="/customers" element={<Customers />} />
+                      <Route path="/orders" element={<Orders />} />
+                      <Route path="/credit-orders" element={<CreditOrders />} />
+                      <Route path="/credit-order/:id" element={<CreditOrderDetails />} />
+                      <Route path="/order/new" element={<NewOrder />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </AdminLayout>
+                }
+              />
+            </Route>
           </Routes>
         </BrowserRouter>
       </TooltipProvider>

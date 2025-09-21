@@ -50,9 +50,10 @@ export default function Login() {
         //   accessList,
         // });
 
-        // navigate(from, { replace: true });
+         navigate("/");
       }
     } catch (error) {
+      console.log(error);
       setError(`${(error as any)?.response?.data?.message || DEFAULT_ERROR_MESSAGE}`);
     } finally {
       setSubmitting(false);

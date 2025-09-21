@@ -13,7 +13,7 @@ import {
 
 interface ConfirmDialogProps {
   children: React.ReactNode;
-  title: string;
+  title?: string;
   description: string;
   confirmText?: string;
   cancelText?: string;
@@ -37,7 +37,9 @@ const ConfirmDialog = ({
       <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
+          {title &&
+            <AlertDialogTitle>{title}</AlertDialogTitle>
+          }
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
