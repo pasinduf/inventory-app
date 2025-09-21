@@ -10,10 +10,14 @@ import { parseJwt } from "@/lib/parseJwt";
 import { useAuth } from "@/hooks/useAuth";
 import { tokenRepository } from "@/api";
 import { useLocation, useNavigate } from "react-router-dom";
+import { getCategoryOptions } from "@/api/category/getOptions";
+import { getSupplierOptions } from "@/api/supplier/getOptions";
+import { useAppStore } from "@/hooks/useAppStore";
 
 export default function Login() {
   
   const { setAuth }: any = useAuth();
+  const { setStore }: any = useAppStore();
   const navigate = useNavigate();
   const location = useLocation();
   const from = location?.state?.from?.pathname || "/";
@@ -41,14 +45,8 @@ export default function Login() {
         setAuth(payload);
         tokenRepository.setAccessAuth(JSON.stringify(payload));
 
-        // const branchFilters = await getFilterBranches();
-        // const centerFilters = await getFilterCenters();
-        // const accessList = await getAccessList();
-        // setStore({
-        //   branchFilters,
-        //   centerFilters,
-        //   accessList,
-        // });
+        const [categories, suppliers] = await Promise.all([getCategoryOptions(), getSupplierOptions()]);
+        setStore({categories,suppliers});
 
          navigate("/");
       }

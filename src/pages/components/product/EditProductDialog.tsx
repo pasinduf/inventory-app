@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Product, ProductInputs } from "@/entries/product/product";
 import { DEFAULT_ERROR_MESSAGE } from "@/api/const";
 import { updateProduct } from "@/api/product/updateProduct";
+import { useAppStore } from "@/hooks/useAppStore";
 
 const Schema = z.object({
   name: z.string().min(1, "Product name is required"),
@@ -35,8 +36,10 @@ interface Props {
 }
 
 export function EditProductDialog({ product, open, onOpenChange }: Props) {
+    
+  const { store, setStore }: any = useAppStore();
   const { toast } = useToast();
-  const [categories, setCategories] = useState([]);
+  const categories = store?.categories || [];
   const [submitting, setSubmitting] = useState(false);
 
   const {
@@ -53,19 +56,6 @@ export function EditProductDialog({ product, open, onOpenChange }: Props) {
     },
     mode: "onSubmit",
   });
-
-  useEffect(() => {
-    const fetchOptions = async () => {
-      try {
-        const [categories] = await Promise.all([getCategoryOptions()]);
-        setCategories(categories);
-      } catch (error) {
-        console.error("Failed to fetch options:", error);
-      }
-    };
-
-    if (open && product) fetchOptions();
-  }, [product, open]);
 
 
    useEffect(() => {

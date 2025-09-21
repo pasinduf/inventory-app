@@ -19,7 +19,7 @@ import { Label } from "@/components/ui/label";
 import { ProductInputs } from "@/entries/product/product";
 import { addProduct } from "@/api/product/addProduct";
 import { DEFAULT_ERROR_MESSAGE } from "@/api/const";
-import { Category } from "@/entries/category/category";
+import { useAppStore } from "@/hooks/useAppStore";
 
 const Schema = z.object({
   name: z.string().min(1, "Product name is required"),
@@ -40,9 +40,11 @@ interface Props {
 }
 
 export function AddProductDialog({ open, onOpenChange, newProduct }: Props) {
+  
+  const { store, setStore }: any = useAppStore();
   const { toast } = useToast();
-  const [categories, setCategories] = useState([]);
-  const [suppliers, setSuppliers] = useState([]);
+  const categories = store?.categories || [];
+  const suppliers = store?.suppliers || [];
   const [submitting, setSubmitting] = useState(false);
 
   const defaultValue = {
@@ -64,20 +66,6 @@ export function AddProductDialog({ open, onOpenChange, newProduct }: Props) {
     defaultValues: defaultValue,
     mode: "onSubmit",
   });
-
-  useEffect(() => {
-    const fetchOptions = async () => {
-      try {
-        const [categories, suppliers] = await Promise.all([getCategoryOptions(), getSupplierOptions()]);
-
-        setCategories(categories);
-        setSuppliers(suppliers);
-      } catch (error) {
-        console.error("Failed to fetch options:", error);
-      }
-    };
-    fetchOptions();
-  }, []);
 
   useEffect(() => {
     if (open && newProduct) {
@@ -137,7 +125,7 @@ export function AddProductDialog({ open, onOpenChange, newProduct }: Props) {
           <DialogDescription>Create a new product for your inventory.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="grid gap-8 py-4">
+          <div className="grid gap-6 py-2">
             <div className="grid gap-2">
               <Label htmlFor="name">Select Supplier</Label>
               <select
@@ -255,7 +243,7 @@ export function AddProductDialog({ open, onOpenChange, newProduct }: Props) {
               </div>
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="mt-2">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>

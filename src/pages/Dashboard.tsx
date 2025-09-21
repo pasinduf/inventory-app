@@ -67,10 +67,10 @@ const Dashboard = () => {
             Welcome back! Here's what's happening with your inventory.
           </p>
         </div>
-        <Button className="bg-gradient-primary">
+        {/* <Button className="bg-gradient-primary">
           <Plus className="h-4 w-4 mr-2" />
           Add Product
-        </Button>
+        </Button> */}
       </div>
 
       {/* Stats Grid */}
