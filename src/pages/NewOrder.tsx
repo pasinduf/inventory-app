@@ -52,10 +52,10 @@ const NewOrder = ()=> {
       }
 
       //Only call api for multiples of 3 characters
-      if (inputValue.length % 3 !== 0) {
-        resolve([]);
-        return;
-      }
+      // if (inputValue.length % 3 !== 0) {
+      //   resolve([]);
+      //   return;
+      // }
 
       fetchProducts(inputValue).then((results) => {
         resolve(results);
@@ -299,7 +299,7 @@ const NewOrder = ()=> {
                           Price: {item.lot.sellingPrice} | Qty: {item.quantity} | Discount: {item.discount.toFixed(2)}
                         </p>
                       </div>
-                      <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleRemoveItem(index)}>
+                      <Button size="sm" className="bg-red-600 text-white hover:bg-red-700" onClick={() => handleRemoveItem(index)}>
                         <Trash2 className="h-12 w-12" />
                       </Button>
                     </div>

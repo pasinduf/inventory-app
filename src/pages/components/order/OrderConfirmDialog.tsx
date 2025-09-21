@@ -75,10 +75,10 @@ const OrderConfirmDialog = ({ open, onOpenChange, order }: Props) => {
       }
 
       //Only call api for multiples of 3 characters
-      if (inputValue.length % 3 !== 0) {
-        resolve([]);
-        return;
-      }
+      // if (inputValue.length % 3 !== 0) {
+      //   resolve([]);
+      //   return;
+      // }
 
       fetchCustomers(inputValue).then((results) => {
         resolve(results);
@@ -203,6 +203,7 @@ const OrderConfirmDialog = ({ open, onOpenChange, order }: Props) => {
             <LoaderCircle className="h-24 w-24 text-white animate-spin" />
           </div>
         )}
+
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
@@ -210,104 +211,105 @@ const OrderConfirmDialog = ({ open, onOpenChange, order }: Props) => {
           </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[60vh]">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-left"></TableHead>
-                <TableHead className="text-left">Product</TableHead>
-                <TableHead className="text-right">Price</TableHead>
-                <TableHead className="text-right">Quantity</TableHead>
-                <TableHead className="text-right">Discount</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {order?.items.length === 0 ? (
-                // Loading skeleton rows
-                Array.from({ length: itemsPerPage }).map((_, index) => (
-                  <TableRow key={index} className="border-b border-border">
-                    <TableCell className="py-2 px-2">
-                      <div className="flex items-center gap-3">
-                        <Skeleton className="w-10 h-10 rounded-lg" />
-                        <Skeleton className="h-4 w-48" />
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-4 px-4">
-                      <Skeleton className="h-4 w-16" />
-                    </TableCell>
-                    <TableCell className="py-4 px-4">
-                      <Skeleton className="h-4 w-16" />
-                    </TableCell>
-                    <TableCell className="py-4 px-4">
-                      <Skeleton className="h-4 w-20" />
-                    </TableCell>
-                    <TableCell className="py-4 px-4">
-                      <Skeleton className="h-4 w-12" />
-                    </TableCell>
-                    <TableCell className="py-4 px-4">
-                      <Skeleton className="h-4 w-16" />
-                    </TableCell>
+        {/* 🔥 Main content wrapper — split into 2/3 + 1/3 if credit is selected */}
+        <div className={`flex gap-6 ${isCrdit ? "flex-row" : "flex-col"}`}>
+          {/* ================= Right side: Items ================= */}
+          <div className={`${isCrdit ? "w-2/3" : "w-full"}`}>
+            <ScrollArea className="max-h-[60vh]">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-left"></TableHead>
+                    <TableHead className="text-left">Product</TableHead>
+                    <TableHead className="text-right">Price</TableHead>
+                    <TableHead className="text-right">Quantity</TableHead>
+                    <TableHead className="text-right">Discount</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
                   </TableRow>
-                ))
-              ) : (
-                // item rows
-                <>
-                  {[...order?.items, ...order?.items, ...order?.items, ...order?.items]?.map((item, index) => (
-                    <TableRow key={`item_${index}`}>
-                      <TableCell className="text-muted-foreground">{item.product.serialNumber}</TableCell>
-                      <TableCell className="text-muted-foreground">{item.product.label}</TableCell>
-                      <TableCell className="text-right text-muted-foreground">{item.lot.sellingPrice}</TableCell>
-                      <TableCell className="text-right text-muted-foreground">{item.quantity.toFixed(2)}</TableCell>
-                      <TableCell className="text-right text-muted-foreground">{item.discount.toFixed(2)}</TableCell>
-                      <TableCell className="text-right text-muted-foreground">{(item.quantity * (item.lot.sellingPrice - item.discount)).toFixed(2)}</TableCell>
-                    </TableRow>
-                  ))}
+                </TableHeader>
+                <TableBody>
+                  {order?.items.length === 0 ? (
+                    // skeleton rows
+                    Array.from({ length: itemsPerPage }).map((_, index) => (
+                      <TableRow key={index} className="border-b border-border">
+                        <TableCell className="py-2 px-2">
+                          <div className="flex items-center gap-3">
+                            <Skeleton className="w-10 h-10 rounded-lg" />
+                            <Skeleton className="h-4 w-48" />
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-4 px-4">
+                          <Skeleton className="h-4 w-16" />
+                        </TableCell>
+                        <TableCell className="py-4 px-4">
+                          <Skeleton className="h-4 w-16" />
+                        </TableCell>
+                        <TableCell className="py-4 px-4">
+                          <Skeleton className="h-4 w-20" />
+                        </TableCell>
+                        <TableCell className="py-4 px-4">
+                          <Skeleton className="h-4 w-12" />
+                        </TableCell>
+                        <TableCell className="py-4 px-4">
+                          <Skeleton className="h-4 w-16" />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <>
+                      {[...order?.items]?.map((item, index) => (
+                        <TableRow key={`item_${index}`}>
+                          <TableCell className="text-muted-foreground">{item.product.serialNumber}</TableCell>
+                          <TableCell className="text-muted-foreground">{item.product.label}</TableCell>
+                          <TableCell className="text-right text-muted-foreground">{item.lot.sellingPrice}</TableCell>
+                          <TableCell className="text-right text-muted-foreground">{item.quantity.toFixed(2)}</TableCell>
+                          <TableCell className="text-right text-muted-foreground">{item.discount.toFixed(2)}</TableCell>
+                          <TableCell className="text-right text-muted-foreground">
+                            {(item.quantity * (item.lot.sellingPrice - item.discount)).toFixed(2)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
 
-                  {order && order?.items?.length > 0 && (
-                    <TableRow>
-                      <TableCell>Total</TableCell>
-                      <TableCell></TableCell>
-                      <TableCell></TableCell>
-                      <TableCell className="text-right text-muted-foreground">{order.grossTotal.toFixed(2)}</TableCell>
-                      <TableCell className="text-right text-muted-foreground">{(order.totalProductDiscount + order.orderDiscount).toFixed(2)}</TableCell>
-                      <TableCell className="text-right">{order.netTotal.toFixed(2)}</TableCell>
-                    </TableRow>
+                      {order && order?.items?.length > 0 && (
+                        <TableRow>
+                          <TableCell>Total</TableCell>
+                          <TableCell></TableCell>
+                          <TableCell></TableCell>
+                          <TableCell className="text-right text-muted-foreground">{order.grossTotal.toFixed(2)}</TableCell>
+                          <TableCell className="text-right text-muted-foreground">{(order.totalProductDiscount + order.orderDiscount).toFixed(2)}</TableCell>
+                          <TableCell className="text-right">{order.netTotal.toFixed(2)}</TableCell>
+                        </TableRow>
+                      )}
+                    </>
                   )}
-                </>
-              )}
-            </TableBody>
-          </Table>
-        </ScrollArea>
+                </TableBody>
+              </Table>
+            </ScrollArea>
 
-        <div>
-          <div className="pt-2">
-            <Checkbox
-              id="terms"
-              checked={isCrdit}
-              onCheckedChange={(checked) => {
-                setIsCredit(!!checked);
-                setSelectedCustomer(null);
-                setCredit(defaultValues);
-              }}
-            />
-            <label htmlFor="terms" className="ml-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Crdit Order
-            </label>
+            {/* Checkbox remains below items (right side) */}
+            <div className="pt-4">
+              <Checkbox
+                id="terms"
+                checked={isCrdit}
+                onCheckedChange={(checked) => {
+                  setIsCredit(!!checked);
+                  setSelectedCustomer(null);
+                  setCredit(defaultValues);
+                }}
+              />
+              <label htmlFor="terms" className="ml-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Credit Order
+              </label>
+            </div>
           </div>
 
+          {/* ================= Left side: Credit Form ================= */}
           {isCrdit && (
-            <>
-              <div className="text-muted-foreground mt-3">
-                <div className="grid grid-cols-3 gap-4 mt-6">
+            <div className="w-1/3 border-l pl-4">
+              <div className="text-muted-foreground">
+                <div className="grid gap-4">
                   <div className="grid gap-2">
                     <label className="block text-sm font-medium">Select Customer</label>
-                    {/* <SearchableDropdown
-                      placeholder="Search customer..."
-                      displayKey="name"
-                      fetchItems={fetchCustomers}
-                      onSelect={(item) => setSelectedCustomer(item)}
-                    /> */}
                     <AsyncSelect
                       loadOptions={loadOptions}
                       isClearable
@@ -316,16 +318,14 @@ const OrderConfirmDialog = ({ open, onOpenChange, order }: Props) => {
                       styles={customStyles}
                     />
                   </div>
+
                   <div className="grid gap-2">
                     <Label htmlFor="startDate">Start Date</Label>
                     <Input id="startDate" type="date" placeholder="Select date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
                   </div>
 
                   <div className="grid gap-2">
-                    <Label htmlFor="period">
-                      Period (Days)
-                      {credit.period > 0 && endDate && <Label className="mt-2 text-sm"> - End date: {yyyyMMDD(endDate)}</Label>}
-                    </Label>
+                    <Label htmlFor="period">Period (Days)</Label>
                     <Input
                       id="period"
                       name="period"
@@ -336,11 +336,10 @@ const OrderConfirmDialog = ({ open, onOpenChange, order }: Props) => {
                       onFocus={(e) => e.target.select()}
                       onChange={onChangeInput}
                     />
+                    {credit.period > 0 && endDate && <Label className="text-sm">End date: {yyyyMMDD(endDate)}</Label>}
                   </div>
-                </div>
 
-                <div className="grid grid-cols-3 gap-4 mt-4">
-                  <div className="grid gap-2">
+                  <div className="grid gap-2 mt-1">
                     <Label htmlFor="downPayment">Down Payment</Label>
                     <Input
                       id="downPayment"
@@ -369,17 +368,18 @@ const OrderConfirmDialog = ({ open, onOpenChange, order }: Props) => {
                   </div>
                 </div>
               </div>
-            </>
+            </div>
           )}
+        </div>
 
-          <div className="flex justify-end pt-4">
-            <Button type="button" variant="outline" onClick={() => onclose(false)}>
-              Cancel
-            </Button>
-            <Button className="bg-gradient-primary ml-3" type="submit" onClick={onConfirm} disabled={!validateOrder()}>
-              Coinfrm Order
-            </Button>
-          </div>
+        {/* Footer buttons always at bottom */}
+        <div className="flex justify-end pt-4">
+          <Button type="button" variant="outline" onClick={() => onclose(false)}>
+            Cancel
+          </Button>
+          <Button className="bg-gradient-primary ml-3" type="submit" onClick={onConfirm} disabled={!validateOrder()}>
+            Confirm Order
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

@@ -74,7 +74,7 @@ export function AdminSidebar() {
           ) : (
             <div className="flex justify-center">
               <div className="h-8 w-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                <Package className="h-4 w-4 text-white" />
+                <img src={logo} alt="App Logo" className="h-10 w-10" />
               </div>
             </div>
           )}
