@@ -19,6 +19,7 @@ import { OrderInputs, OrderResponse } from "@/entries/order/order";
 import { createOrder } from "@/api/orders/createOrder";
 import { useToast } from "@/hooks/use-toast";
 import { DEFAULT_ERROR_MESSAGE } from "@/api/const";
+import AsyncSelect from "react-select/async";
 
 interface OrderItem {
   product: ProductOption;
@@ -66,6 +67,24 @@ const OrderConfirmDialog = ({ open, onOpenChange, order }: Props) => {
     return customers || [];
   };
 
+  const loadOptions = (inputValue: string) =>
+    new Promise<CustomerOption[]>((resolve) => {
+      if (inputValue.length < 3) {
+        resolve([]);
+        return;
+      }
+
+      //Only call api for multiples of 3 characters
+      if (inputValue.length % 3 !== 0) {
+        resolve([]);
+        return;
+      }
+
+      fetchCustomers(inputValue).then((results) => {
+        resolve(results);
+      });
+    });
+
   const onChangeInput=(event:any)=>{
     setCredit({
       ...credit,
@@ -84,7 +103,7 @@ const OrderConfirmDialog = ({ open, onOpenChange, order }: Props) => {
   const validateOrder = () =>{
     if(isCrdit)
       return startDate && selectedCustomer && credit.period > 0 && credit.installmentAmount > 0 && credit.downPayment > 0 && order.items?.length > 0;
-    return order.items?.length >0;
+    return order.items?.length > 0;
   }
 
 
@@ -144,10 +163,41 @@ const OrderConfirmDialog = ({ open, onOpenChange, order }: Props) => {
   }
 
 
+   const customStyles = {
+     control: (provided: any) => ({
+       ...provided,
+       backgroundColor: "#020817",
+       borderColor: "#fff",
+       color: "#fff",
+       "&:hover": {
+         borderColor: "#fff",
+       },
+     }),
+     input: (provided: any) => ({
+       ...provided,
+       color: "#fff",
+     }),
+     menu: (provided: any) => ({
+       ...provided,
+       backgroundColor: "#1f1f1f",
+       color: "#fff",
+     }),
+     option: (provided: any, state: any) => ({
+       ...provided,
+       backgroundColor: state.isFocused ? "#333" : "#1f1f1f",
+       color: "#fff",
+       cursor: "pointer",
+     }),
+     singleValue: (provided: any) => ({
+       ...provided,
+       color: "#fff",
+     }),
+   };
+
 
   return (
     <Dialog open={open} onOpenChange={() => onclose(false)}>
-      <DialogContent className="max-w-3xl max-h-auto overflow-hidden">
+      <DialogContent className="max-w-4xl max-h-auto overflow-hidden">
         {submitting && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
             <LoaderCircle className="h-24 w-24 text-white animate-spin" />
@@ -206,7 +256,7 @@ const OrderConfirmDialog = ({ open, onOpenChange, order }: Props) => {
                   {[...order?.items, ...order?.items, ...order?.items, ...order?.items]?.map((item, index) => (
                     <TableRow key={`item_${index}`}>
                       <TableCell className="text-muted-foreground">{item.product.serialNumber}</TableCell>
-                      <TableCell className="text-muted-foreground">{item.product.name}</TableCell>
+                      <TableCell className="text-muted-foreground">{item.product.label}</TableCell>
                       <TableCell className="text-right text-muted-foreground">{item.lot.sellingPrice}</TableCell>
                       <TableCell className="text-right text-muted-foreground">{item.quantity.toFixed(2)}</TableCell>
                       <TableCell className="text-right text-muted-foreground">{item.discount.toFixed(2)}</TableCell>
@@ -252,11 +302,18 @@ const OrderConfirmDialog = ({ open, onOpenChange, order }: Props) => {
                 <div className="grid grid-cols-3 gap-4 mt-6">
                   <div className="grid gap-2">
                     <label className="block text-sm font-medium">Select Customer</label>
-                    <SearchableDropdown
+                    {/* <SearchableDropdown
                       placeholder="Search customer..."
                       displayKey="name"
                       fetchItems={fetchCustomers}
                       onSelect={(item) => setSelectedCustomer(item)}
+                    /> */}
+                    <AsyncSelect
+                      loadOptions={loadOptions}
+                      isClearable
+                      value={selectedCustomer}
+                      onChange={(product) => setSelectedCustomer(product)}
+                      styles={customStyles}
                     />
                   </div>
                   <div className="grid gap-2">

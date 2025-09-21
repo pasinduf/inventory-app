@@ -1,5 +1,5 @@
 export class CustomerOption {
   value: string;
-  name: string;
+  label: string;
   customerNumber: string;
 }

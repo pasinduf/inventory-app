@@ -11,10 +11,10 @@ import { ProductLot } from "@/entries/product/product-lot";
 import { PrinterIcon, RefreshCw, Trash2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { yyyyMMDD } from "@/lib/dateFormatter";
-import { useToast } from "@/hooks/use-toast";
 import OrderConfirmDialog from "./components/order/OrderConfirmDialog";
 import { OrderResponse } from "@/entries/order/order";
 import Receipt from "./components/order/Receipt";
+import AsyncSelect from "react-select/async";
 
 interface OrderItem {
   product: ProductOption;
@@ -25,8 +25,6 @@ interface OrderItem {
 
 const NewOrder = ()=> {
 
-  const { toast } = useToast();
-  
   const today = new Date();
   const [date, setDate] = useState<any>(yyyyMMDD(today));
 
@@ -46,13 +44,36 @@ const NewOrder = ()=> {
     return products || [];
   };
 
+  const loadOptions = (inputValue: string) =>
+    new Promise<ProductOption[]>((resolve) => {
+      if (inputValue.length < 3) {
+        resolve([]);
+        return;
+      }
 
-  const onSelectProduct = async (poduct:ProductOption) => {
-    setSelectedProduct(poduct);
+      //Only call api for multiples of 3 characters
+      if (inputValue.length % 3 !== 0) {
+        resolve([]);
+        return;
+      }
+
+      fetchProducts(inputValue).then((results) => {
+        resolve(results);
+      });
+  });
+
+  const onSelectProduct = async (product:ProductOption) => {
+    setSelectedProduct(product);
+    if(!product) {
+       setLots([]);
+       setSelectedLot(null);
+       setQuantity(0);
+       setProductDiscount(0);
+       return;
+    };
   
-    const lots = await getProductLots(+poduct.value);
-    setLots(lots)
-  
+    const lots = await getProductLots(+product.value);
+    setLots(lots || [])
   }
 
   const onAddToOrder = () => {
@@ -84,6 +105,7 @@ const NewOrder = ()=> {
      });
 
     // reset
+    setSelectedProduct(null);
     setLots([]);
     setSelectedLot(null);
     setQuantity(0);
@@ -128,13 +150,48 @@ const NewOrder = ()=> {
 
 
   const clearPage =()=>{
-    setOrderItems([]);
-    setLots([]);
+    setDate(yyyyMMDD(today));
+    setSelectedProduct(null);
     setSelectedLot(null);
+    setLots([]);
     setQuantity(0);
     setProductDiscount(0);
+    setOrderDiscount(0)
+    setOrderItems([]);
     setOrderResponse(null);
   }
+
+
+  const customStyles = {
+    control: (provided: any) => ({
+      ...provided,
+      backgroundColor: "#020817",
+      borderColor: "#fff",
+      color: "#fff",
+      "&:hover": {
+        borderColor: "#fff",
+      },
+    }),
+    input: (provided: any) => ({
+      ...provided,
+      color: "#fff",
+    }),
+    menu: (provided: any) => ({
+      ...provided,
+      backgroundColor: "#1f1f1f",
+      color: "#fff",
+    }),
+    option: (provided: any, state: any) => ({
+      ...provided,
+      backgroundColor: state.isFocused ? "#333" : "#1f1f1f",
+      color: "#fff",
+      cursor: "pointer",
+    }),
+    singleValue: (provided: any) => ({
+      ...provided,
+      color: "#fff",
+    }),
+  };
 
   const grossTotal = orderItems.reduce((sum, item) => sum + item.quantity * item.lot.sellingPrice, 0);
   const totalProductDiscount = orderItems.reduce((sum, item) => sum + item.quantity*item.discount, 0);
@@ -159,7 +216,14 @@ const NewOrder = ()=> {
             </div>
             <div>
               <label className="block text-sm font-medium">Select Product</label>
-              <SearchableDropdown placeholder="Search product..." displayKey="name" fetchItems={fetchProducts} onSelect={(item) => onSelectProduct(item)} />
+              {/* <SearchableDropdown placeholder="Search product..." displayKey="name" fetchItems={fetchProducts} onSelect={(item) => onSelectProduct(item)} /> */}
+              <AsyncSelect
+                loadOptions={loadOptions}
+                isClearable
+                value={selectedProduct}
+                onChange={(product) => onSelectProduct(product)}
+                styles={customStyles}
+              />
             </div>
 
             {selectedProduct && lots.length > 0 && (
@@ -184,7 +248,7 @@ const NewOrder = ()=> {
             )}
 
             {/* Enter amount + discount */}
-            {selectedLot && (
+            {selectedProduct && selectedLot && (
               <div className="space-y-2">
                 <Input
                   type="number"
@@ -230,7 +294,7 @@ const NewOrder = ()=> {
                   {orderItems.map((item, index) => (
                     <div key={index} className="flex justify-between items-center border-b pb-2">
                       <div>
-                        <p className="font-medium">{item.product.name}</p>
+                        <p className="font-medium">{item.product.label}</p>
                         <p className="text-sm text-gray-500">
                           Price: {item.lot.sellingPrice} | Qty: {item.quantity} | Discount: {item.discount.toFixed(2)}
                         </p>
