@@ -9,40 +9,23 @@ import {
   ShoppingCart,
   Building2,
   Plus,
-  ArrowUpRight
+  ArrowUpRight,
+  BanknoteIcon,
+  AlertCircle
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getSummary } from "@/api/dashboard/getSummary";
+import { Summary } from "@/entries/dashboard/summary";
+import { Skeleton } from "@/components/ui/skeleton";
+
 
 const Dashboard = () => {
-  const stats = [
-    {
-      title: "Total Products",
-      value: "1,247",
-      change: "+12.5%",
-      changeType: "positive" as const,
-      icon: Package
-    },
-    {
-      title: "Low Stock Items",
-      value: "23",
-      change: "-5.2%",
-      changeType: "negative" as const,
-      icon: AlertTriangle
-    },
-    {
-      title: "Total Value",
-      value: "$284,590",
-      change: "+18.7%",
-      changeType: "positive" as const,
-      icon: DollarSign
-    },
-    {
-      title: "Categories",
-      value: "48",
-      change: "+2",
-      changeType: "positive" as const,
-      icon: Building2
-    }
-  ];
+
+ const [loadingSummary, setLoadingSummary] = useState(true);
+ const [error, setError] = useState<string | null>(null);
+ const [summary, setSummary] = useState<Summary | null>(null);
+const cardsPerPage = 4;
+
 
   const lowStockProducts = [
     { name: "Wireless Mouse", sku: "WM001", current: 5, minimum: 20, category: "Electronics" },
@@ -51,21 +34,43 @@ const Dashboard = () => {
     { name: "Desk Lamp", sku: "DL404", current: 3, minimum: 15, category: "Lighting" },
   ];
 
-  const recentActivity = [
-    { action: "Stock Updated", item: "Laptop Stand", time: "2 minutes ago" },
-    { action: "New Product Added", item: "Ergonomic Keyboard", time: "1 hour ago" },
-    { action: "Stock Alert", item: "USB Cable", time: "3 hours ago" },
-    { action: "Category Created", item: "Gaming Accessories", time: "5 hours ago" },
-  ];
+  const data :any = {
+    labels: ["Jan", "Feb", "Mar"],
+    datasets: [
+      {
+        label: "Sales",
+        data: [400, 300, 500],
+        backgroundColor: "rgba(75, 192, 192, 0.6)",
+      },
+    ],
+  };
+
+
+     useEffect(() => {
+        fetchSummary();
+     }, []);
+  
+  
+    const fetchSummary = async () => {
+      try {
+        setLoadingSummary(true);
+        setError(null);
+
+        const response = await getSummary();
+        setSummary(response);;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to fetch data");
+      } finally {
+        setLoadingSummary(false);
+      }
+    };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground">
-            Welcome back! Here's what's happening with your inventory.
-          </p>
+          <p className="text-muted-foreground">Welcome back! Here's what's happening with your inventory.</p>
         </div>
         {/* <Button className="bg-gradient-primary">
           <Plus className="h-4 w-4 mr-2" />
@@ -75,32 +80,96 @@ const Dashboard = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => (
-          <Card key={stat.title} className="shadow-card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.title}
-              </CardTitle>
-              <stat.icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <div className="flex items-center space-x-2 text-xs">
-                <Badge 
-                  variant={stat.changeType === "positive" ? "default" : "destructive"}
-                  className="text-xs"
-                >
-                  {stat.change}
-                </Badge>
-                <span className="text-muted-foreground">from last month</span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        {loadingSummary ? (
+          Array.from({ length: cardsPerPage }).map((_, index) => (
+            <Card key={index} className="shadow-card">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <Skeleton className="h-8 w-24" />
+                <Skeleton className="h-8 w-8" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-8" />
+              </CardContent>
+            </Card>
+          ))
+        ) : error ? (
+          // Error state
+          <div className="col-span-full">
+            <Card className="shadow-card">
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+                <h3 className="font-medium text-foreground mb-2">Failed to load data</h3>
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          <>
+            <Card className="shadow-card">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Categories</CardTitle>
+                <Building2 className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{summary?.totalCategories}</div>
+                {/* <div className="flex items-center space-x-2 text-xs">
+              <Badge variant={stat.changeType === "positive" ? "default" : "destructive"} className="text-xs">
+                {stat.change}
+              </Badge>
+              <span className="text-muted-foreground">from last month</span>
+            </div> */}
+              </CardContent>
+            </Card>
+            <Card className="shadow-card">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Total Products</CardTitle>
+                <Package className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{summary?.totalProducts}</div>
+              </CardContent>
+            </Card>
+            <Card className="shadow-card">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Total Value</CardTitle>
+                <BanknoteIcon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{summary?.totalProductsValue.toLocaleString()}</div>
+              </CardContent>
+            </Card>
+            <Card className="shadow-card">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Credit Orders</CardTitle>
+                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{summary?.totalCreditOrdersValue.toLocaleString()}</div>
+              </CardContent>
+            </Card>
+          </>
+        )}
+      </div>
+      <div className="grid grid-cols-1 gap-6">
+        <Card className="lg:col-span-2 shadow-card">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-warning" />
+              Low Stock Alert
+            </CardTitle>
+            <Button variant="outline" size="sm">
+              View All
+              <ArrowUpRight className="h-4 w-4 ml-1" />
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {/* <Bar data={data} /> */}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Low Stock Alert */}
+      {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2 shadow-card">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2">
@@ -132,7 +201,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Recent Activity */}
+
         <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -155,10 +224,10 @@ const Dashboard = () => {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </div> */}
 
       {/* Quick Actions */}
-      <Card className="shadow-card">
+      {/* <Card className="shadow-card">
         <CardHeader>
           <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
@@ -182,7 +251,7 @@ const Dashboard = () => {
             </Button>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 };
