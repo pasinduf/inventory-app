@@ -1,15 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { 
   Package, 
-  TrendingUp, 
   AlertTriangle, 
-  DollarSign,
-  ShoppingCart,
   Building2,
-  Plus,
-  ArrowUpRight,
   BanknoteIcon,
   AlertCircle
 } from "lucide-react";
@@ -17,53 +10,84 @@ import { useEffect, useState } from "react";
 import { getSummary } from "@/api/dashboard/getSummary";
 import { Summary } from "@/entries/dashboard/summary";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Bar, BarChart, CartesianGrid, Legend, Rectangle, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { getSales } from "@/api/dashboard/getSales";
+import { Sale } from "@/entries/dashboard/sales";
+import { addDaysToDate, yyyyMMDD } from "@/lib/dateFormatter";
 
 
 const Dashboard = () => {
 
  const [loadingSummary, setLoadingSummary] = useState(true);
+ const [loadingSales, setLoadingSales] = useState(true);
  const [error, setError] = useState<string | null>(null);
  const [summary, setSummary] = useState<Summary | null>(null);
-const cardsPerPage = 4;
+
+ 
+ const [sales, setSales] = useState<Sale[] | []>(null);
+ const [fromDate, setFromDate] = useState("");
+ const [toDate, setToDate] = useState("");
+ const [chartType, setChartType] = useState("week");
+ const now = new Date();
+ const cardsPerPage = 4;
 
 
-  const lowStockProducts = [
-    { name: "Wireless Mouse", sku: "WM001", current: 5, minimum: 20, category: "Electronics" },
-    { name: "Office Chair", sku: "OC102", current: 2, minimum: 10, category: "Furniture" },
-    { name: "Bluetooth Speaker", sku: "BS203", current: 8, minimum: 25, category: "Electronics" },
-    { name: "Desk Lamp", sku: "DL404", current: 3, minimum: 15, category: "Lighting" },
-  ];
+  useEffect(() => {
+    fetchSummary();
+  }, []);
 
-  const data :any = {
-    labels: ["Jan", "Feb", "Mar"],
-    datasets: [
-      {
-        label: "Sales",
-        data: [400, 300, 500],
-        backgroundColor: "rgba(75, 192, 192, 0.6)",
-      },
-    ],
+
+  const fetchSummary = async () => {
+    try {
+      setLoadingSummary(true);
+      setError(null);
+
+      const response = await getSummary();
+      setSummary(response);;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch summary data");
+    } finally {
+      setLoadingSummary(false);
+    }
   };
+   
+   useEffect(() => {
+     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+     const today = now;
 
+     setFromDate(yyyyMMDD(firstDay));
+     setToDate(yyyyMMDD(today));
+   }, []);
 
-     useEffect(() => {
-        fetchSummary();
-     }, []);
-  
-  
-    const fetchSummary = async () => {
-      try {
-        setLoadingSummary(true);
-        setError(null);
-
-        const response = await getSummary();
-        setSummary(response);;
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch data");
-      } finally {
-        setLoadingSummary(false);
+   useEffect(()=>{
+      if(chartType === 'week'){
+        const firstDay = addDaysToDate(now, -7);
+        setFromDate(yyyyMMDD(firstDay));
+      }else{
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        setFromDate(yyyyMMDD(firstDay));
       }
-    };
+   },[chartType])
+
+    useEffect(() => {
+        if (fromDate && toDate) {
+          fetchSales();
+        }
+      }, [fromDate, toDate]);
+
+  const fetchSales = async () => {
+    try {
+      setLoadingSales(true);
+      setError(null);
+
+      const response = await getSales({ fromDate, toDate});
+      setSales(response);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch sales data");
+    } finally {
+      setLoadingSales(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -72,10 +96,6 @@ const cardsPerPage = 4;
           <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
           <p className="text-muted-foreground">Welcome back! Here's what's happening with your inventory.</p>
         </div>
-        {/* <Button className="bg-gradient-primary">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Product
-        </Button> */}
       </div>
 
       {/* Stats Grid */}
@@ -152,18 +172,42 @@ const cardsPerPage = 4;
       <div className="grid grid-cols-1 gap-6">
         <Card className="lg:col-span-2 shadow-card">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-warning" />
-              Low Stock Alert
-            </CardTitle>
-            <Button variant="outline" size="sm">
-              View All
-              <ArrowUpRight className="h-4 w-4 ml-1" />
-            </Button>
+            <CardTitle className="flex items-center gap-2">Recent Sales</CardTitle>
+            <select
+              id="type"
+              name="type"
+              className="mt-1 block  rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              value={chartType}
+              onChange={(e: any) => setChartType(e.target.value)}
+            >
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+            </select>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {/* <Bar data={data} /> */}
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  width={500}
+                  height={300}
+                  data={sales}
+                  // margin={{
+                  //   top: 5,
+                  //   right: 30,
+                  //   left: 20,
+                  //   bottom: 5,
+                  // }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip cursor={{ fill: "transparent" }} />
+                  <Legend />
+                  <Bar dataKey="instantSales" fill="#8884d8" name="Instant Orders" barSize={20} />
+                  <Bar dataKey="creditPayments" fill="#82ca9d" name="Credit Payments" barSize={20} />
+                  {/* <Bar dataKey="uv" fill="#82ca9d" activeBar={<Rectangle fill="gold" stroke="purple" />} /> */}
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>

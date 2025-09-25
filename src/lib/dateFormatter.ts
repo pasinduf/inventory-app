@@ -17,8 +17,6 @@ export function getTime(date: string) {
    return format(dateObj, "HH:mm:ss");
 }
 
-
-
 export function addDaysToDate(date: Date, days: number): Date {
   const result = new Date(date);
   return addDays(result, days);;
