@@ -255,7 +255,16 @@ const NewOrder = ()=> {
                   placeholder="Quantity"
                   value={quantity || ""}
                   onFocus={(e) => e.target.select()}
-                  onChange={(e) => setQuantity(Number(e.target.value))}
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    if (val > Number(selectedLot.quantity)) {
+                      setQuantity(Number(selectedLot.quantity));
+                    } else if (val < 0) {
+                      setQuantity(0);
+                    } else {
+                      setQuantity(val);
+                    }
+                  }}
                 />
                 <Input
                   type="number"
