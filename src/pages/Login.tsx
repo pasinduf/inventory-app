@@ -118,7 +118,7 @@ export default function Login() {
               Sign In
             </Button>
 
-            <div className="mt-1 text-destructive text-center">{error}</div>
+            <div className="mt-1 text-destructive text-center font-bold">{error}</div>
           </form>
 
           {/* <div className="mt-6 text-center">

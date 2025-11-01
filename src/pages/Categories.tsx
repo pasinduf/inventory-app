@@ -140,12 +140,16 @@ const Categories = () => {
             </Card>
           </div>
         ) : data.length === 0 ? (
-          <div className="flex flex-col items-center gap-3">
-            <Package className="h-12 w-12 text-muted-foreground" />
-            <div>
-              <h3 className="font-medium text-foreground">No categories found</h3>
-              {/* <p className="text-muted-foreground">{searchQuery ? "Try adjusting your search terms" : "No products available at the moment"}</p> */}
-            </div>
+          <div className="col-span-full">
+            <Card className="shadow-card">
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <Package className="h-12 w-12 text-muted-foreground" />
+                <div>
+                  <h3 className="font-medium text-foreground">No categories found</h3>
+                  {/* <p className="text-muted-foreground">{searchQuery ? "Try adjusting your search terms" : "No products available at the moment"}</p> */}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         ) : (
           data.map((category) => (

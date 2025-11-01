@@ -188,7 +188,7 @@ const Customers = () => {
                       <div className="flex flex-col items-center gap-3">
                         <Package className="h-12 w-12 text-muted-foreground" />
                         <div>
-                          <h3 className="font-medium text-foreground">No records found</h3>
+                          <h3 className="font-medium text-foreground">No customers found</h3>
                         </div>
                       </div>
                     </td>
