@@ -26,9 +26,9 @@ const Schema = z.object({
   category: z.string().min(1, "Category is required"),
   supplier: z.string().min(1, "Supplier is required"),
   unit: z.string().min(1, "Unit is required"),
-  quantity: z.number().min(0, "Quantity must be positive"),
-  buyingPrice: z.number().min(0, "Price must be positive"),
-  sellingPrice: z.number().min(0, "Price must be positive"),
+  quantity: z.number().min(0.01, "Enter valid Quantity"),
+  buyingPrice: z.number().min(0.01, "Enter valid Price"),
+  sellingPrice: z.number().min(0.01, "Enter valid Price"),
 });
 
 type FormData = z.infer<typeof Schema>;
@@ -92,6 +92,7 @@ export function AddProductDialog({ open, onOpenChange, newProduct }: Props) {
           variant: "success",
           title: `Product Added Successfully`,
         });
+        reset();
         onOpenChange(true, false);
       }
     } catch (error: any) {
@@ -119,58 +120,60 @@ export function AddProductDialog({ open, onOpenChange, newProduct }: Props) {
         onOpenChange(false, false);
       }}
     >
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Add New Product</DialogTitle>
           <DialogDescription>Create a new product for your inventory.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid gap-6 py-2">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Select Supplier</Label>
-              <select
-                id="supplier"
-                name="supplier"
-                className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                defaultValue=""
-                {...register("supplier")}
-              >
-                <option value="" disabled>
-                  Select Supplier
-                </option>
-                {suppliers.map((supplier) => {
-                  return (
-                    <option key={supplier.value} value={supplier.value}>
-                      {supplier.name}
-                    </option>
-                  );
-                })}
-              </select>
-              {errors.supplier && <p className="text-red-500 text-sm">{errors.supplier.message}</p>}
-            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="name">Select Category</Label>
+                <select
+                  id="category"
+                  name="category"
+                  className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  defaultValue=""
+                  {...register("category")}
+                  disabled={!!newProduct}
+                >
+                  <option value="" disabled>
+                    Select Category
+                  </option>
+                  {categories.map((category) => {
+                    return (
+                      <option key={category.value} value={category.value}>
+                        {category.name}
+                      </option>
+                    );
+                  })}
+                </select>
+                {errors.category && <p className="text-red-500 text-sm">{errors.category.message}</p>}
+              </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="name">Select Category</Label>
-              <select
-                id="category"
-                name="category"
-                className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                defaultValue=""
-                {...register("category")}
-                disabled={!!newProduct}
-              >
-                <option value="" disabled>
-                  Select Category
-                </option>
-                {categories.map((category) => {
-                  return (
-                    <option key={category.value} value={category.value}>
-                      {category.name}
-                    </option>
-                  );
-                })}
-              </select>
-              {errors.category && <p className="text-red-500 text-sm">{errors.category.message}</p>}
+              <div className="grid gap-2">
+                <Label htmlFor="name">Select Supplier</Label>
+                <select
+                  id="supplier"
+                  name="supplier"
+                  className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  defaultValue=""
+                  {...register("supplier")}
+                >
+                  <option value="" disabled>
+                    Select Supplier
+                  </option>
+                  {suppliers.map((supplier) => {
+                    return (
+                      <option key={supplier.value} value={supplier.value}>
+                        {supplier.name}
+                      </option>
+                    );
+                  })}
+                </select>
+                {errors.supplier && <p className="text-red-500 text-sm">{errors.supplier.message}</p>}
+              </div>
             </div>
 
             <div className="grid gap-2">

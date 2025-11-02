@@ -127,9 +127,12 @@ const UpdateStock = () => {
       <Card className="shadow-card">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
-            <h2 className="text-2xl font-semibold">Update Stock</h2>
+            <h3 className="font-semibold">Update Stock</h3>
             <p className="text-gray-500">
-              Manage lots for {product?.name} ({product?.serialNumber})
+              Manage lots for{" "}
+              <span className="text-white font-semibold">
+                {product?.name} ({product?.serialNumber})
+              </span>
             </p>
           </div>
 

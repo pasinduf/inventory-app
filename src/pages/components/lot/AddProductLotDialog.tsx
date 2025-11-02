@@ -24,9 +24,9 @@ interface Props {
 const schema = z.object({
   date: z.string().min(1, "Date is required"),
   supplierId: z.string().min(1, "Supplier is required"),
-  quantity: z.number().min(0, "Quantity must be positive"),
-  buyingPrice: z.number().min(0, "Price must be positive"),
-  sellingPrice: z.number().min(0, "Price must be positive"),
+  quantity: z.number().min(0.01, "Enter valid Quantity"),
+  buyingPrice: z.number().min(0.01, "Enter valid Price"),
+  sellingPrice: z.number().min(0.01, "Enter valid Price"),
 });
 
 type FormData = z.infer<typeof schema>;

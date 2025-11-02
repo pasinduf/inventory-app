@@ -1,19 +1,18 @@
 import React from "react";
 import { OrderResponse } from "@/entries/order/order";
 import { getDate, getTime } from "@/lib/dateFormatter";
+import { SHOP_NAME } from "@/api/const";
 
 const Receipt: React.FC<{ order: OrderResponse }> = ({ order }) => {
   return (
     <div id="order_receipt" className="p-4 text-sm font-mono">
-      <h2 className="text-center text-lg font-bold mb-2">My Shop</h2>
-      <p className="text-center mb-4">Thank you for your purchase!</p>
-
+      <h2 className="text-center text-lg font-bold mb-2">{SHOP_NAME}</h2>
       <div className="mb-4">
         <p>
-          <strong>Order:</strong> {order.orderNumber}
+          <strong>Date:</strong> {getDate(order.createdAt)} {getTime(order?.createdAt)}
         </p>
         <p>
-          <strong>Date:</strong> {getDate(order.createdAt)} {getTime(order?.createdAt)}
+          <strong>Order:</strong> {order.orderNumber}
         </p>
       </div>
 
@@ -50,11 +49,12 @@ const Receipt: React.FC<{ order: OrderResponse }> = ({ order }) => {
           <strong>Discounts:</strong> -{order.discount.toFixed(2)}
         </p>
         <p className="font-bold text-lg">
-          <strong>Net Total:</strong> - {order.netAmount.toFixed(2)}
+          <strong>Net Total: {order.netAmount.toFixed(2)} </strong>
         </p>
       </div>
 
-      <p className="text-center mt-4">Powered by My System</p>
+      <p className="text-center mb-4">Thank you for your purchase!</p>
+      {/* <p className="text-center mt-4">Powered by {SHOP_NAME}</p> */}
     </div>
   );
 };

@@ -12,6 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Supplier } from "@/entries/supplier/supplier";
 import { updateSupplier } from "@/api/supplier/updateSupplier";
 import { addSupplier } from "@/api/supplier/addSupplier";
+import { getSupplierOptions } from "@/api/supplier/getOptions";
+import { useAppStore } from "@/hooks/useAppStore";
 
 interface Props {
   open: boolean;
@@ -28,6 +30,8 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 export function AddSupplierDialog({ open, onOpenChange, supplier }: Props) {
+
+  const { store, setStore }: any = useAppStore();
   const { toast } = useToast();
   const [submitting, setSubmitting] = useState(false);
 
@@ -59,6 +63,12 @@ export function AddSupplierDialog({ open, onOpenChange, supplier }: Props) {
         toast({
           variant: "success",
           title: `Supplier ${supplier ? "Updated" : "Added"} Successfully`,
+        });
+
+        const list = await getSupplierOptions();
+        setStore({
+          ...store,
+          suppliers: list,  
         });
       }
     } catch (error: any) {

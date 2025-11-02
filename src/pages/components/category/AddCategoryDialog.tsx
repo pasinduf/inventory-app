@@ -12,6 +12,8 @@ import { addCategory } from "@/api/category/addCategory";
 import { useToast } from "@/hooks/use-toast";
 import { updateCategory } from "@/api/category/updateCategory";
 import { Label } from "@/components/ui/label";
+import { getCategoryOptions } from "@/api/category/getOptions";
+import { useAppStore } from "@/hooks/useAppStore";
 
 interface Props {
   open: boolean;
@@ -28,6 +30,8 @@ type FormData = z.infer<typeof schema>;
 
 
 export function AddCategoryDialog({ open, onOpenChange, category }: Props) {
+
+  const { store, setStore }: any = useAppStore();
   const { toast } = useToast();
   const [submitting, setSubmitting] = useState(false);
 
@@ -61,6 +65,13 @@ export function AddCategoryDialog({ open, onOpenChange, category }: Props) {
           variant: "success",
           title: `Category ${category ? 'Updated' : 'Added'} Successfully`,
         });
+
+        const list = await getCategoryOptions();
+        setStore({
+          ...store,
+          categories: list,
+        });
+
       }
     } catch (error: any) {
       toast({

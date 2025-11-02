@@ -8,7 +8,7 @@ import { getProductOptions } from "@/api/product/getProductOptions";
 import { ProductOption } from "@/entries/product/option";
 import { getProductLots } from "@/api/product/getProductLots";
 import { ProductLot } from "@/entries/product/product-lot";
-import { PrinterIcon, RefreshCw, Trash2 } from "lucide-react";
+import { Plus, PrinterIcon, RefreshCw, Trash2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { yyyyMMDD } from "@/lib/dateFormatter";
 import OrderConfirmDialog from "./components/order/OrderConfirmDialog";
@@ -274,7 +274,9 @@ const NewOrder = ()=> {
                   onChange={(e) => setProductDiscount(Number(e.target.value))}
                 />
                 <div className="flex justify-end py-2">
-                  <Button onClick={onAddToOrder}>Add to Order</Button>
+                  <Button onClick={onAddToOrder}>
+                    <Plus className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             )}
@@ -308,7 +310,7 @@ const NewOrder = ()=> {
                           Price: {item.lot.sellingPrice} | Qty: {item.quantity} | Discount: {item.discount.toFixed(2)}
                         </p>
                       </div>
-                      <Button size="sm" className="bg-red-600 text-white hover:bg-red-700" onClick={() => handleRemoveItem(index)}>
+                      <Button size="sm" className="bg-red-600 text-white hover:bg-red-700" onClick={() => handleRemoveItem(index)} disabled={!!orderResponse}>
                         <Trash2 className="h-12 w-12" />
                       </Button>
                     </div>
