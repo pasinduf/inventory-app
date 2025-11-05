@@ -223,6 +223,7 @@ const NewOrder = ()=> {
                 value={selectedProduct}
                 onChange={(product) => onSelectProduct(product)}
                 styles={customStyles}
+                placeholder="Search product..."
               />
             </div>
 

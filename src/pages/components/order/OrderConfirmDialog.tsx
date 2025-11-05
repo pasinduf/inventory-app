@@ -316,6 +316,7 @@ const OrderConfirmDialog = ({ open, onOpenChange, order }: Props) => {
                       value={selectedCustomer}
                       onChange={(product) => setSelectedCustomer(product)}
                       styles={customStyles}
+                      placeholder="Search customer..."
                     />
                   </div>
 
