@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus,  Package, AlertCircle,View, EyeIcon, List } from "lucide-react";
+import { Search, Plus,  Package, AlertCircle,View, EyeIcon, List, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { yyyyMMDD } from "@/lib/dateFormatter";
@@ -11,9 +11,13 @@ import { getOrders } from "@/api/orders/getOrders";
 import { Badge } from "@/components/ui/badge";
 import OrderDetailsDialog from "./components/order/OrderDetailsDialog";
 import { useNavigate } from "react-router-dom";
+import ConfirmDialog from "@/components/ui/confirm-dialog";
+import { deleteOrder } from "@/api/orders/deleteOrder";
+import { DEFAULT_ERROR_MESSAGE } from "@/api/const";
 
 const Orders = () => {
 
+  const { toast } = useToast();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [fromDate, setFromDate] = useState("");
@@ -58,6 +62,24 @@ const Orders = () => {
       setLoading(false);
     }
   };
+
+   const onDeleteOrder= async (id)=>{
+      try {
+        const result = await deleteOrder(id);
+        if (result) {
+          toast({
+            variant: "success",
+            title: `Order Deleted Successfully`,
+          });
+          fetchOrders();
+        }
+      } catch (error: any) {
+        toast({
+          variant: "destructive",
+          title: `${(error as any)?.response?.data?.message || DEFAULT_ERROR_MESSAGE}`,
+        });
+      }
+    }
 
 
   const filteredData = data?.filter((order) => order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -194,7 +216,13 @@ const Orders = () => {
                       <td className="py-4 px-4 text-muted-foreground">{order.amount}</td>
                       <td className="py-4 px-4 text-muted-foreground">{order.discount}</td>
 
-                      <td className="py-4 px-4">{order.isCreditOrder && <Badge className="bg-warning text-warning-foreground">Credit</Badge>}</td>
+                      <td className="py-4 px-4">
+                        {order.isCreditOrder ? (
+                          <Badge className="bg-warning text-warning-foreground">Credit</Badge>
+                        ) : (
+                          <Badge className="bg-success text-success-foreground">Cash</Badge>
+                        )}
+                      </td>
 
                       <td className="py-4 px-4 text-right">
                         <OrderDetailsDialog orderId={order.id} orderNumber={order.orderNumber}>
@@ -202,6 +230,19 @@ const Orders = () => {
                             <List className="h-3 w-3 text-muted-foreground" />
                           </Button>
                         </OrderDetailsDialog>
+                      </td>
+                      <td>
+                        <ConfirmDialog
+                          title="Delete Order"
+                          description="Are you sure you want to delete this order?"
+                          confirmText="Delete"
+                          variant="destructive"
+                          onConfirm={() => onDeleteOrder(order.id)}
+                        >
+                          <Button variant="ghost" size="sm" className="text-destructive h-8 w-8 ml-3">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </ConfirmDialog>
                       </td>
                     </tr>
                   ))

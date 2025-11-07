@@ -12,8 +12,8 @@ import { Plus, PrinterIcon, RefreshCw, Trash2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { yyyyMMDD } from "@/lib/dateFormatter";
 import OrderConfirmDialog from "./components/order/OrderConfirmDialog";
-import { OrderResponse } from "@/entries/order/order";
-import Receipt from "./components/order/Receipt";
+import { CreateOrderResponse, OrderResponse } from "@/entries/order/order";
+import OrderReceipt from "./components/order/OrderReceipt";
 import AsyncSelect from "react-select/async";
 
 interface OrderItem {
@@ -36,7 +36,7 @@ const NewOrder = ()=> {
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [orderDiscount, setOrderDiscount] = useState<number>(0);
   const [openConfirm, setOpenConfirm] = useState(false);
-  const [orderResponse, setOrderResponse] = useState<OrderResponse | null>(null);
+  const [orderResponse, setOrderResponse] = useState<CreateOrderResponse | null>(null);
 
 
   const fetchProducts = async (search: string) => {
@@ -116,11 +116,13 @@ const NewOrder = ()=> {
     setOrderItems((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const onOpenChange = (open, data?: OrderResponse) => {
+  const onOpenChange = (open, data?: CreateOrderResponse) => {
     setOpenConfirm(open);
-    if(data){
+    if (data) {
       setOrderResponse(data);
-      setOpenConfirm(false);
+       setTimeout(() => {
+         handlePrint();
+       }, 1000);
     }
   };
 
@@ -282,13 +284,13 @@ const NewOrder = ()=> {
               </div>
             )}
 
-            <div className="flex justify-end">
+            {/* <div className="flex justify-end">
               {orderResponse && (
                 <Button variant="outline" className="bg-gradient-primary" onClick={handlePrint}>
                   <PrinterIcon className="h-4 w-4" /> Print
                 </Button>
               )}
-            </div>
+            </div> */}
           </CardContent>
         </Card>
 
@@ -368,7 +370,9 @@ const NewOrder = ()=> {
         }}
       />
 
-      <div className="hidden">{orderResponse && <Receipt order={orderResponse} />}</div>
+      <div className="hidden">
+        {orderResponse && <OrderReceipt orderResponse={orderResponse} />}
+      </div>
     </div>
   );
 }
