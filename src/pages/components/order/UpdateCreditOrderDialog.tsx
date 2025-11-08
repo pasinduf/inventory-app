@@ -33,8 +33,6 @@ interface Props {
 
 export function UpdateCreditOrderDialog({ open, onOpenChange, creditOrder }: Props) {
 
-  console.log(creditOrder);
-  
   const { toast } = useToast();
   const [submitting, setSubmitting] = useState(false);
 
