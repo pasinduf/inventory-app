@@ -163,8 +163,8 @@ const CreditOrderDetails = () => {
                 <span>{order?.amount}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
-                <span className="font-medium">Period:</span>
-                <span>{order?.period} Days</span>
+                <span className="font-medium">Down Payment:</span>
+                <span>{order?.downPayment}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
                 <span className="font-medium">Start Date:</span>
@@ -173,6 +173,14 @@ const CreditOrderDetails = () => {
               <div className="flex justify-between text-muted-foreground">
                 <span className="font-medium">End Date:</span>
                 <span>{order?.endDate}</span>
+              </div>
+              <div className="flex justify-between text-muted-foreground">
+                <span className="font-medium">Period:</span>
+                <span>{order?.period} Days</span>
+              </div>
+              <div className="flex justify-between text-muted-foreground">
+                <span className="font-medium">Installment:</span>
+                <span>{order?.installmentAmount}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
                 <span className="font-medium">Balance:</span>
@@ -290,7 +298,7 @@ const CreditOrderDetails = () => {
                                 </>
                               )}
                               {item.type === "Installment" && (
-                                <Button variant="ghost" size="sm" className="ml-1" onClick={()=>onPrint(item)}>
+                                <Button variant="ghost" size="sm" className="ml-1" onClick={() => onPrint(item)}>
                                   <PrinterIcon className="h-4 w-4" />
                                 </Button>
                               )}
@@ -307,7 +315,7 @@ const CreditOrderDetails = () => {
 
           <AddPaymentDialog order={order} open={openAdd} onOpenChange={onOpenChangeAdd} />
 
-          <div className="hidden">{paymentResponse && <PaymentReceiptPrint payment={paymentResponse}  />}</div>
+          <div className="hidden">{paymentResponse && <PaymentReceiptPrint payment={paymentResponse} />}</div>
         </div>
       )}
     </div>

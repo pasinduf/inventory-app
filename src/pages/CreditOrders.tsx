@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus,  Package, AlertCircle,View, Info, MoreHorizontal, Edit, ArrowBigRightDash, ArrowRight, PlusIcon } from "lucide-react";
+import { Search, Plus,  Package, AlertCircle,View, Info, MoreHorizontal, Edit, ArrowBigRightDash, ArrowRight, PlusIcon, PencilIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { yyyyMMDD } from "@/lib/dateFormatter";
 import { PaginationWrapper } from "@/components/PaginationWrapper";
@@ -17,6 +17,7 @@ import { AddPaymentDialog } from "./components/payment/AddPaymentDialog";
 import { useNavigate } from "react-router-dom";
 import { PaymentReceipt } from "@/entries/payment/payment";
 import PaymentReceiptPrint from "./components/payment/PaymentReceipt";
+import { UpdateCreditOrderDialog } from "./components/order/UpdateCreditOrderDialog";
 
 const CreditOrders = () => {
   const navigate = useNavigate();
@@ -31,6 +32,7 @@ const CreditOrders = () => {
 
   const [openView, setOpenView] = useState(false);
   const [openAdd, setOpenAdd] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
   const [order, setOrder] = useState(null);
   const [paymentResponse, setPaymentResponse] = useState<PaymentReceipt | null>(null);
 
@@ -86,6 +88,13 @@ const CreditOrders = () => {
     }
   };
 
+  
+  const onOpenChangeEdit = (refresh: boolean, open: boolean) => {
+    setOpenEdit(open);
+    setOrder(null);
+    if (refresh) fetchOrders();
+  };
+
 
    const handlePrint = () => {
      const printContent = document.getElementById("payment_receipt")?.innerHTML;
@@ -138,7 +147,12 @@ const CreditOrders = () => {
           <div className="flex items-center gap-4">
             <div className="relative flex-[6]">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search orders by order number, customer" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
+              <Input
+                placeholder="Search orders by order number, customer"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
             </div>
 
             <div className="flex-[2]">
@@ -297,6 +311,17 @@ const CreditOrders = () => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            {order.isEditable && (
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setOrder(order);
+                                  setOpenEdit(true);
+                                }}
+                              >
+                                <PencilIcon className="h-4 w-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem
                               onClick={() => {
                                 setOrder(order);
@@ -320,8 +345,7 @@ const CreditOrders = () => {
                       </TableCell>
 
                       <TableCell className="py-4 px-4 text-right">
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => navigate(`/credit-order/${order.id}`)}
-                          >
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => navigate(`/credit-order/${order.id}`)}>
                           <ArrowRight className="h-3 w-3 text-muted-foreground" />
                         </Button>
                       </TableCell>
@@ -331,6 +355,9 @@ const CreditOrders = () => {
               </TableBody>
             </Table>
 
+            {order &&
+             <UpdateCreditOrderDialog creditOrder={order} open={openEdit} onOpenChange={onOpenChangeEdit} />
+            }
             <OrderPaymentsDialog orderId={order?.id} customer={order?.customer} open={openView} onOpenChange={onOpenChangeView} />
             <AddPaymentDialog order={order} customer={order?.customer} open={openAdd} onOpenChange={onOpenChangeAdd} />
           </div>
@@ -341,10 +368,7 @@ const CreditOrders = () => {
         </CardContent>
       </Card>
 
-      <div className="hidden">
-        {paymentResponse && <PaymentReceiptPrint payment={paymentResponse} />}
-      </div>
-
+      <div className="hidden">{paymentResponse && <PaymentReceiptPrint payment={paymentResponse} />}</div>
     </div>
   );
 };

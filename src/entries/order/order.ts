@@ -22,7 +22,8 @@ export class CreditOrder {
   downPayment: string;
   installmentAmount: string;
   remaining: string;
-  isCompleted:boolean;
+  isCompleted: boolean;
+  isEditable:boolean;
 }
 
 
