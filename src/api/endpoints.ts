@@ -6,5 +6,6 @@ export const ENDPOINTS = {
   EXPENSE: "/expenses",
   CUSTOMER: "/customer",
   ORDERS: "/order",
+  PAYMENT: "/payment",
   DASHBOARD: "/dashboard",
 };

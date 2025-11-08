@@ -19,6 +19,8 @@ import UpdateStock from "./pages/UpdateStock";
 import NewOrder from "./pages/NewOrder";
 import CreditOrderDetails from "./pages/CreditOrderDetails";
 import RequireAuth from "./components/RequireAuth";
+import Payments from "./pages/Payments";
+import OrderSummary from "./pages/OrderSummary";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +50,8 @@ const App = () => (
                       <Route path="/customers" element={<Customers />} />
                       <Route path="/orders" element={<Orders />} />
                       <Route path="/credit-orders" element={<CreditOrders />} />
+                      <Route path="/payments" element={<Payments />} />
+                      <Route path="/report" element={<OrderSummary />} />
                       <Route path="/credit-order/:id" element={<CreditOrderDetails />} />
                       <Route path="/order/new" element={<NewOrder />} />
                       <Route path="*" element={<NotFound />} />

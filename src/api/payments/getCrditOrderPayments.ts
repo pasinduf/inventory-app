@@ -3,6 +3,6 @@ import { apiClient } from "..";
 import { ENDPOINTS } from "../endpoints";
 
 export const getCrditOrderPayments = async (id: number): Promise<CreditOrderPayment[]> => {
-  const response = await apiClient.get(`${ENDPOINTS.ORDERS}/installment/${id}`);
+  const response = await apiClient.get(`${ENDPOINTS.PAYMENT}/order/${id}`);
   return response.data;
 };

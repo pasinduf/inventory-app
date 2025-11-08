@@ -15,6 +15,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import OrderPaymentsDialog from "./components/order/OrderPaymentsDialog";
 import { AddPaymentDialog } from "./components/payment/AddPaymentDialog";
 import { useNavigate } from "react-router-dom";
+import { PaymentReceipt } from "@/entries/payment/payment";
+import PaymentReceiptPrint from "./components/payment/PaymentReceipt";
 
 const CreditOrders = () => {
   const navigate = useNavigate();
@@ -30,6 +32,7 @@ const CreditOrders = () => {
   const [openView, setOpenView] = useState(false);
   const [openAdd, setOpenAdd] = useState(false);
   const [order, setOrder] = useState(null);
+  const [paymentResponse, setPaymentResponse] = useState<PaymentReceipt | null>(null);
 
   const itemsPerPage = 5;
 
@@ -72,12 +75,45 @@ const CreditOrders = () => {
     setOpenView(open);
   };
 
-  const onOpenChangeAdd = (refresh:boolean,open: boolean) => {
+  const onOpenChangeAdd = (refresh:boolean,open: boolean,response?: PaymentReceipt) => {
     setOpenAdd(open);
     if (refresh) fetchOrders();
+    if (response) {
+      setPaymentResponse(response);
+      setTimeout(() => {
+        handlePrint();
+      }, 1000);
+    }
   };
 
-  const filteredData = data?.filter((order) => order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()));
+
+   const handlePrint = () => {
+     const printContent = document.getElementById("payment_receipt")?.innerHTML;
+     const printWindow = window.open("", "", "width=600,height=800");
+     if (printWindow && printContent) {
+       printWindow.document.write(`
+      <html>
+        <head>
+          <style>
+            body { font-family: monospace; padding: 10px; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border-bottom: 1px solid #ddd; padding: 4px; }
+            th { text-align: left; }
+            .text-right { text-align: right; }
+          </style>
+        </head>
+        <body>${printContent}</body>
+      </html>
+    `);
+       printWindow.document.close();
+       printWindow.print();
+     }
+   };
+
+  const filteredData = data?.filter((order) => 
+    order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    order.customer.toLowerCase().includes(searchQuery.toLowerCase())
+);
 
   const totalPages = Math.ceil(filteredData?.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -102,7 +138,7 @@ const CreditOrders = () => {
           <div className="flex items-center gap-4">
             <div className="relative flex-[6]">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search orders by order number" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
+              <Input placeholder="Search orders by order number, customer" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
             </div>
 
             <div className="flex-[2]">
@@ -304,6 +340,11 @@ const CreditOrders = () => {
           )}
         </CardContent>
       </Card>
+
+      <div className="hidden">
+        {paymentResponse && <PaymentReceiptPrint payment={paymentResponse} />}
+      </div>
+
     </div>
   );
 };

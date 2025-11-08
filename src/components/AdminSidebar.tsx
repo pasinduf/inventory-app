@@ -8,6 +8,8 @@ import {
   BarChart3,
   Settings,
   ShoppingCart,
+  ShoppingBagIcon,
+  DollarSign,
   User
 } from "lucide-react";
 
@@ -33,8 +35,10 @@ const mainItems = [
 ];
 
 const orderItems = [
-  { title: "Orders", url: "/orders", icon: BarChart3 },
-  { title: "Credit Orders", url: "/credit-orders", icon: ShoppingCart },
+  { title: "Orders", url: "/orders", icon: ShoppingCart },
+  { title: "Credit Orders", url: "/credit-orders", icon: ShoppingBagIcon },
+  { title: "Payments", url: "/payments", icon: DollarSign },
+  { title: "Summary", url: "/report", icon: BarChart3 },
 ];
 
 const otherItems = [

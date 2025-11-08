@@ -19,8 +19,9 @@ import ConfirmDialog from "@/components/ui/confirm-dialog";
 import { deletePayment } from "@/api/payments/deletePaymet";
 import { DEFAULT_ERROR_MESSAGE } from "@/api/const";
 import { AddPaymentDialog } from "./components/payment/AddPaymentDialog";
-import { PaymentReceipt } from "@/entries/payment/payment";
+import { CreditOrderPayment, PaymentReceipt } from "@/entries/payment/payment";
 import PaymentReceiptPrint from "./components/payment/PaymentReceipt";
+import { it } from "node:test";
 
 const CreditOrderDetails = () => {
 
@@ -29,8 +30,8 @@ const CreditOrderDetails = () => {
   const [order, setOrder] = useState<CreditOrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-   const [openAdd, setOpenAdd] = useState(false);
-    const [paymentResponse, setPaymentResponse] = useState<PaymentReceipt | null>(null);
+  const [openAdd, setOpenAdd] = useState(false);
+  const [paymentResponse, setPaymentResponse] = useState<PaymentReceipt | null>(null);
   const itemsPerPage = 5;
 
 
@@ -105,6 +106,26 @@ const CreditOrderDetails = () => {
        printWindow.document.close();
        printWindow.print();
      }
+   };
+
+
+   const onPrint = (item: CreditOrderPayment) => {
+     const data = {
+       date: item.date,
+       orderNumber: order.orderNumber,
+       customer: order.customer,
+       fullAmount: Number(order.amount),
+       downPayment: Number(order.downPayment),
+       outstandingAmount: Number(order.remaining) + Number(item.amount),
+       paidAmount: Number(item.amount),
+       balanceAmount: Number(order.remaining),
+       receiptNo: item.receiptNo,
+       hideOutstanding:true
+     };
+     setPaymentResponse(data);
+      setTimeout(() => {
+        handlePrint();
+      }, 500);
    };
 
   
@@ -184,6 +205,7 @@ const CreditOrderDetails = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="sticky top-0 text-left">Date</TableHead>
+                      <TableHead className="sticky top-0 text-left">Rec.No</TableHead>
                       <TableHead className="sticky top-0 text-right">Amount</TableHead>
                       <TableHead className="sticky top-0 text-center">Type</TableHead>
                       <TableHead className="sticky top-0 text-center">Actions</TableHead>
@@ -202,6 +224,9 @@ const CreditOrderDetails = () => {
                           </TableCell>
                           <TableCell className="py-4 px-4">
                             <Skeleton className="h-4 w-12" />
+                          </TableCell>
+                          <TableCell className="py-4 px-4">
+                            <Skeleton className="h-4 w-16" />
                           </TableCell>
                           <TableCell className="py-4 px-4">
                             <Skeleton className="h-4 w-16" />
@@ -238,6 +263,7 @@ const CreditOrderDetails = () => {
                         {order.payments?.map((item, index) => (
                           <TableRow key={item.id}>
                             <TableCell className="text-muted-foreground">{item.date}</TableCell>
+                            <TableCell className="text-muted-foreground">{item.receiptNo}</TableCell>
                             <TableCell className="text-right text-muted-foreground">{item.amount}</TableCell>
                             <TableCell className="text-center text-muted-foreground">
                               <Badge className={`${item.type === "Installment" ? "bg-success text-success-foreground" : "bg-warning text-warning-foreground"}`}>
@@ -264,7 +290,7 @@ const CreditOrderDetails = () => {
                                 </>
                               )}
                               {item.type === "Installment" && (
-                                <Button variant="ghost" size="sm" className="ml-1">
+                                <Button variant="ghost" size="sm" className="ml-1" onClick={()=>onPrint(item)}>
                                   <PrinterIcon className="h-4 w-4" />
                                 </Button>
                               )}
@@ -281,7 +307,7 @@ const CreditOrderDetails = () => {
 
           <AddPaymentDialog order={order} open={openAdd} onOpenChange={onOpenChangeAdd} />
 
-          <div className="hidden">{paymentResponse && <PaymentReceiptPrint payment={paymentResponse} />}</div>
+          <div className="hidden">{paymentResponse && <PaymentReceiptPrint payment={paymentResponse}  />}</div>
         </div>
       )}
     </div>
