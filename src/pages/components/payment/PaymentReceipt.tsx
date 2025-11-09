@@ -35,11 +35,9 @@ const PaymentReceiptPrint: React.FC<{
         <p>
           <strong>Down Payment:</strong> {payment.downPayment.toFixed(2)}
         </p>
-        {!payment.hideOutstanding && (
-          <p>
-            <strong>Outstanding:</strong> {payment.outstandingAmount.toFixed(2)}
-          </p>
-        )}
+        <p>
+          <strong>Outstanding:</strong> {payment.outstandingAmount.toFixed(2)}
+        </p>
         <p>
           <strong>Payment:</strong> {payment.paidAmount.toFixed(2)}
         </p>

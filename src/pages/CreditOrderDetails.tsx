@@ -84,7 +84,6 @@ const CreditOrderDetails = () => {
     }
   };
 
-
    const handlePrint = () => {
      const printContent = document.getElementById("payment_receipt")?.innerHTML;
      const printWindow = window.open("", "", "width=600,height=800");
@@ -108,7 +107,6 @@ const CreditOrderDetails = () => {
      }
    };
 
-
    const onPrint = (item: CreditOrderPayment) => {
      const data = {
        date: item.date,
@@ -116,11 +114,10 @@ const CreditOrderDetails = () => {
        customer: order.customer,
        fullAmount: Number(order.amount),
        downPayment: Number(order.downPayment),
-       outstandingAmount: Number(order.remaining) + Number(item.amount),
+       outstandingAmount: Number(item.balance) + Number(item.amount),
        paidAmount: Number(item.amount),
-       balanceAmount: Number(order.remaining),
+       balanceAmount: Number(item.balance),
        receiptNo: item.receiptNo,
-       hideOutstanding:true
      };
      setPaymentResponse(data);
       setTimeout(() => {

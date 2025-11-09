@@ -35,8 +35,8 @@ const OrderReceipt: React.FC<{
           <table className="w-full">
             <thead>
               <tr style={{ borderTop: "1px dashed", borderBottom: "1px dashed" }}>
-                <th className="p-1 text-left"></th>
-                <th className="p-1 text-left">Product</th>
+                <th className="p-1 text-center"></th>
+                <th className="p-1 text-center">Product</th>
                 <th className="p-1 text-right">Price</th>
                 <th className="p-1 text-right">Qty</th>
               </tr>
@@ -54,21 +54,13 @@ const OrderReceipt: React.FC<{
           </table>
 
           <div style={{ textAlign: "right", marginLeft: "30px" }}>
-            <p>
-              Discounts: -{order.discount.toFixed(2)}
-            </p>
+            <p>Discounts: -{order.discount.toFixed(2)}</p>
             <p className="font-bold text-lg">
               <strong>Net Total: {credit.amount.toFixed(2)} </strong>
             </p>
-            <p>
-              Down Payment: {credit.downPayment.toFixed(2)}
-            </p>
-            <p>
-              Period: {credit.period} days
-            </p>
-            <p>
-              Installment: {credit.installmentAmount.toFixed(2)}
-            </p>
+            <p>Down Payment: {credit.downPayment.toFixed(2)}</p>
+            <p>Period: {credit.period} days</p>
+            <p>Installment: {credit.installmentAmount.toFixed(2)}</p>
             <p className="font-bold text-lg">
               <strong>Balance: {credit.balance.toFixed(2)} </strong>
             </p>
@@ -102,12 +94,8 @@ const OrderReceipt: React.FC<{
           </table>
 
           <div style={{ textAlign: "right", marginLeft: "30px" }}>
-            <p>
-              Gross Total: {order.grossAmount.toFixed(2)}
-            </p>
-            <p>
-              Discounts: -{order.discount.toFixed(2)}
-            </p>
+            <p>Gross Total: {order.grossAmount.toFixed(2)}</p>
+            <p>Discounts: -{order.discount.toFixed(2)}</p>
             <p className="font-bold text-lg">
               <strong>Net Total: {order.netAmount.toFixed(2)} </strong>
             </p>

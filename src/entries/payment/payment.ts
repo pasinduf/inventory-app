@@ -4,6 +4,7 @@ export class CreditOrderPayment {
   amount: number;
   type: string;
   receiptNo: string;
+  balance:number;
 }
 
 
@@ -22,5 +23,4 @@ export class PaymentReceipt {
   paidAmount: number;
   balanceAmount: number;
   receiptNo:string;
-  hideOutstanding?:boolean;
 }
