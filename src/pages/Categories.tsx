@@ -172,7 +172,7 @@ const Categories = () => {
                       <CardTitle className="text-lg">{category.name}</CardTitle>
                       <Badge variant="secondary" className="mt-1 text-sm text-muted-foreground">
                         <Package className="h-3 w-3 mr-1" />
-                        {category.productCount} products
+                        {category.productCount} {category.productCount > 1 ? "products" : "product"}
                       </Badge>
                     </div>
                   </div>
@@ -195,7 +195,7 @@ const Categories = () => {
 
                       <ConfirmDialog
                         title="Delete Category"
-                        description={`Are you sure you want to delete the "${category.name}" category?`}
+                        description={`Are you sure you want to delete the "${category.name}" category, with existing ${category.productCount} products?`}
                         confirmText="Delete"
                         variant="destructive"
                         onConfirm={() => onDeleteCategory(category.id)}
