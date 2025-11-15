@@ -23,7 +23,7 @@ const OrderSummary = () => {
   const [error, setError] = useState<string | null>(null);
 
   const today = format(new Date(), "yyyy-MM-dd");
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
 
   useEffect(() => {
     if (isInitial) {

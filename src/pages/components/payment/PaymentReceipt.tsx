@@ -2,16 +2,28 @@ import React from "react";
 import { getDate, getTime } from "@/lib/dateFormatter";
 import { SHOP_ADDRESS, SHOP_NAME, SHOP_PHONE } from "@/api/const";
 import { PaymentReceipt } from "@/entries/payment/payment";
+import logo from "/logo.jpeg"; 
 
 const PaymentReceiptPrint: React.FC<{
   payment: PaymentReceipt;
 }> = ({ payment }) => {
   return (
     <div id="payment_receipt" className="text-sm font-mono w-full max-w-sm mx-auto">
-      <div style={{ textAlign: "center", paddingBottom: "0px" }}>
-        <h2 className="text-2xl font-extrabold leading-tight">{SHOP_NAME}</h2>
-        <p className="text-xs">{SHOP_ADDRESS}</p>
-        <p className="text-xs">TEL:{SHOP_PHONE}</p>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <img
+          src={logo}
+          alt="Logo"
+          style={{
+            maxHeight: "60px",
+            width: "auto",
+            objectFit: "contain",
+          }}
+        />
+      <div style={{ textAlign: "center", flex: 1, margin: 0, lineHeight: 1, paddingBottom: "0px" }}>
+          <h2 className="text-2xl font-extrabold leading-tight">{SHOP_NAME}</h2>
+          <p className="text-xs">{SHOP_ADDRESS}</p>
+          <p className="text-xs">TEL:{SHOP_PHONE}</p>
+      </div>
       </div>
       <div className="mb-4">
         <p>

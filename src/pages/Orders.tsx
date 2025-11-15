@@ -31,7 +31,7 @@ const Orders = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
    const [orderResponse, setOrderResponse] = useState<CreateOrderResponse | null>(null);
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
 
   useEffect(() => {
     const now = new Date();

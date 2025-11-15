@@ -36,7 +36,7 @@ const CreditOrders = () => {
   const [order, setOrder] = useState(null);
   const [paymentResponse, setPaymentResponse] = useState<PaymentReceipt | null>(null);
 
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
 
   useEffect(() => {
     const now = new Date();

@@ -2,6 +2,7 @@ import React from "react";
 import { CreateOrderResponse } from "@/entries/order/order";
 import { getDate, getTime } from "@/lib/dateFormatter";
 import { SHOP_ADDRESS, SHOP_NAME, SHOP_PHONE } from "@/api/const";
+import logo from "/logo.jpeg"; 
 
 const OrderReceipt: React.FC<{ 
   orderResponse: CreateOrderResponse
@@ -11,11 +12,28 @@ const OrderReceipt: React.FC<{
 
   return (
     <div id="order_receipt" className="text-sm font-mono w-full max-w-sm mx-auto">
-      <div style={{ textAlign: "center", paddingBottom: "0px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <img
+          src={logo}
+          alt="Logo"
+          style={{
+            maxHeight: "60px",
+            width: "auto",
+            objectFit: "contain",
+          }}
+        />
+        <div style={{ textAlign: "center", flex: 1 ,margin: 0, lineHeight:1 }}>
+          <h2 className="text-2xl font-extrabold leading-tight">{SHOP_NAME}</h2>
+          <p className="text-xs">{SHOP_ADDRESS}</p>
+          <p className="text-xs">TEL:{SHOP_PHONE}</p>
+        </div>
+      </div>
+      {/* <div style={{ textAlign: "center", paddingBottom: "0px" }}>
         <h2 className="text-2xl font-extrabold leading-tight">{SHOP_NAME}</h2>
         <p className="text-xs">{SHOP_ADDRESS}</p>
         <p className="text-xs">TEL:{SHOP_PHONE}</p>
-      </div>
+      </div> */}
+
       <div className="mb-4">
         <p>
           <strong>Date:</strong> {getDate(order.createdAt)} {getTime(order?.createdAt)}
