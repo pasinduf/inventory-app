@@ -13,6 +13,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { getCategoryOptions } from "@/api/category/getOptions";
 import { getSupplierOptions } from "@/api/supplier/getOptions";
 import { useAppStore } from "@/hooks/useAppStore";
+import logo from "/logo.jpeg"; 
 
 export default function Login() {
   
@@ -65,9 +66,18 @@ export default function Login() {
       <Card className="w-full max-w-md shadow-card border-border">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
-            <div className="h-12 w-12 rounded-lg bg-gradient-primary flex items-center justify-center">
+            {/* <div className="h-12 w-12 rounded-lg bg-gradient-primary flex items-center justify-center">
               <Lock className="h-6 w-6 text-primary-foreground" />
-            </div>
+            </div> */}
+            <img
+              src={logo}
+              alt="Logo"
+              style={{
+                maxHeight: "80px",
+                width: "auto",
+                objectFit: "contain",
+              }}
+            />
           </div>
           <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
           <CardDescription>Sign in to your account</CardDescription>
