@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus,  Package, AlertCircle } from "lucide-react";
+import { Search, Plus,  Package, AlertCircle, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PaginationWrapper } from "@/components/PaginationWrapper";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -27,19 +27,24 @@ const OrderSummary = () => {
 
   useEffect(() => {
     if (isInitial) {
-      fetchOrderSummary(today, today);
+      fetchOrderSummary(today, today,true);
     }
   }, [isInitial]);
 
-  const fetchOrderSummary = async (from: string, to: string) => {
+  const fetchOrderSummary = async (from: string, to: string, isToday?:boolean) => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await getOrderSummary({
+      const params :any = {
         fromDate: from,
         toDate: to,
-      });
+      };
+      if (!isToday) {
+        params.isRange = true;
+      }
+
+      const response = await getOrderSummary(params);
 
       setData(response);
       if (isInitial) setIsInitial(false);
@@ -55,7 +60,7 @@ const OrderSummary = () => {
     setDateFilter(filter);
     switch (filter) {
       case "today": {
-        fetchOrderSummary(today, today);
+        fetchOrderSummary(today, today, true);
         break;
       }
       case "week": {
@@ -71,6 +76,25 @@ const OrderSummary = () => {
     }
   };
 
+
+   const onExpand = (date: string, isExpand:boolean) => {
+    setData((prev) =>
+      prev
+        ? {
+            ...prev,
+            items: prev.items.map((item) =>
+              item.date === date
+                ? {
+                    ...item,
+                    isExpand: isExpand,
+                  }
+                : item
+            ),
+          }
+        : prev
+    );
+   };
+
   const orderRecords = data?.items || [];
   const totalPages = Math.ceil(orderRecords?.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -79,6 +103,9 @@ const OrderSummary = () => {
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
+
+
+ 
 
   return (
     <div className="space-y-4">
@@ -139,10 +166,17 @@ const OrderSummary = () => {
 
       <Card className="shadow-card">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            Orders ({orderRecords?.length})
-          </CardTitle>
+          {loading ? (
+            <div className="flex items-center gap-3">
+              <Skeleton className="w-10 h-10 rounded-lg" />
+              <Skeleton className="h-4 w-48" />
+            </div>
+          ) : (
+            <CardTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              Orders ({data?.count})
+            </CardTitle>
+          )}
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -150,7 +184,7 @@ const OrderSummary = () => {
               <TableHeader>
                 <TableRow className="border-b border-border">
                   <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">Date</TableHead>
-                  <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">Order No</TableHead>
+                  <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">Order #</TableHead>
                   <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">Amount</TableHead>
                   <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">Profit</TableHead>
                 </TableRow>
@@ -205,16 +239,36 @@ const OrderSummary = () => {
                 ) : (
                   // order rows
                   paginatedData?.map((order, index) => (
-                    <TableRow key={index} className="border-b border-border hover:bg-muted/50">
-                      <TableCell className="py-4 px-4">
-                        <div className="flex items-center gap-3">
-                          <span className="font-medium text-muted-foreground">{order.date}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-4 px-4 text-muted-foreground">{order.orderNumber}</TableCell>
-                      <TableCell className="py-4 px-4 text-muted-foreground">{order.amount.toFixed(2)}</TableCell>
-                      <TableCell className="py-4 px-4 text-muted-foreground">{order.profit.toFixed(2)}</TableCell>
-                    </TableRow>
+                    <>
+                      <TableRow key={order.date} className="border-b border-border hover:bg-muted/50">
+                        <TableCell className="py-4 px-4 font-medium text-muted-foreground">
+                          <span className="">{order.date}</span>
+                          {order?.orders?.length > 0 &&
+                            (order.isExpand ? (
+                              <Button variant="ghost" size="sm" className="ml-1" onClick={() => onExpand(order.date, false)}>
+                                <ChevronUp className="h-1 w-1" />
+                              </Button>
+                            ) : (
+                              <Button variant="ghost" size="sm" className="ml-1" onClick={() => onExpand(order.date, true)}>
+                                <ChevronDown className="h-1 w-1" />
+                              </Button>
+                            ))}
+                        </TableCell>
+                        <TableCell className="py-4 px-4 text-muted-foreground">{order.orders?.length ? order.orders.length : order.orderNumber}</TableCell>
+                        <TableCell className="py-4 px-4 text-muted-foreground">{order.amount.toFixed(2)}</TableCell>
+                        <TableCell className="py-4 px-4 text-muted-foreground">{order.profit.toFixed(2)}</TableCell>
+                      </TableRow>
+
+                      {order.isExpand &&
+                        order.orders?.map((item) => (
+                          <TableRow key={`${order.date}_${item.orderNumber}`} className="bg-muted/10">
+                            <TableCell className="py-2 px-4"></TableCell>
+                            <TableCell className="py-2 px-4 text-muted-foreground">{item.orderNumber}</TableCell>
+                            <TableCell className="py-2 px-4 text-muted-foreground">{item.amount.toFixed(2)}</TableCell>
+                            <TableCell className="py-2 px-4 text-muted-foreground">{item.profit.toFixed(2)}</TableCell>
+                          </TableRow>
+                        ))}
+                    </>
                   ))
                 )}
               </TableBody>
