@@ -276,7 +276,7 @@ const CreditOrderDetails = () => {
                               </Badge>
                             </TableCell>
                             <TableCell className="text-muted-foreground text-center">
-                              {index == 0 && (
+                              {index == 0 && item.type == "Installment" && (
                                 <>
                                   {/* <Button variant="ghost" size="sm" className="h-8 w-8 p-0 ml-2" onClick={() => {}}>
                                     <Edit className="h-3 w-3" />
