@@ -6,6 +6,7 @@ export class OrderSummaryListResponse {
   count: number;
   totalAmount: number;
   totalProfit: number;
+  isRange:boolean;
 }
 
 export class OrderDaySummaryDto {
@@ -14,12 +15,14 @@ export class OrderDaySummaryDto {
   amount: number;
   profit: number;
   orders: OrderSummaryDto[];
-  isExpand:boolean;
+  isExpand: boolean;
+  isCreditOrder?: boolean;
 }
 
 
 export class OrderSummaryDto {
   orderNumber: string;
+  isCreditOrder:boolean;
   amount: number;
   profit: number;
 }

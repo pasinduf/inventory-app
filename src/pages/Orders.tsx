@@ -11,7 +11,6 @@ import { PaginationWrapper } from "@/components/PaginationWrapper";
 import { getOrders } from "@/api/orders/getOrders";
 import { Badge } from "@/components/ui/badge";
 import OrderDetailsDialog from "./components/order/OrderDetailsDialog";
-import { useNavigate } from "react-router-dom";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
 import { deleteOrder } from "@/api/orders/deleteOrder";
 import { DEFAULT_ERROR_MESSAGE } from "@/api/const";

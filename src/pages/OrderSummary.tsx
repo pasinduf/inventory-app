@@ -10,6 +10,8 @@ import { getPayments } from "@/api/payments/getPayments";
 import { format, startOfMonth, startOfWeek } from "date-fns";
 import { getOrderSummary } from "@/api/orders/getOrderSummary";
 import { OrderSummaryListResponse } from "@/entries/order/order-summary-list-response";
+import { Badge } from "@/components/ui/badge";
+import { formatNumber } from "@/lib/decimalFormatter";
 
 const OrderSummary = () => {
   const [dateFilter, setDateFilter] = useState("today");
@@ -254,7 +256,18 @@ const OrderSummary = () => {
                               </Button>
                             ))}
                         </TableCell>
-                        <TableCell className="py-4 px-4 text-muted-foreground">{order.orders?.length ? order.orders.length : order.orderNumber}</TableCell>
+                        <TableCell className="py-4 px-4 text-muted-foreground">
+                          {order.orders?.length ? order.orders.length : order.orderNumber}
+                          {!data.isRange && (
+                            <span className="ml-4">
+                              {order.isCreditOrder ? (
+                                <Badge className="bg-warning text-warning-foreground">Credit</Badge>
+                              ) : (
+                                <Badge className="bg-success text-success-foreground">Cash</Badge>
+                              )}
+                            </span>
+                          )}
+                        </TableCell>
                         <TableCell className="py-4 px-4 text-muted-foreground">{order.amount.toFixed(2)}</TableCell>
                         <TableCell className="py-4 px-4 font-bold text-muted-foreground">{order.profit.toFixed(2)}</TableCell>
                       </TableRow>
@@ -263,11 +276,20 @@ const OrderSummary = () => {
                         order.orders?.map((item) => (
                           <TableRow key={`${order.date}_${item.orderNumber}`} className="bg-muted/10">
                             <TableCell className="py-2 px-4"></TableCell>
-                            <TableCell className="py-2 px-4 text-muted-foreground">{item.orderNumber}</TableCell>
+                            <TableCell className="py-2 px-4 text-muted-foreground">
+                              {item.orderNumber}
+                              <span className="ml-4">
+                                {item.isCreditOrder ? (
+                                  <Badge className="bg-warning text-warning-foreground">Credit</Badge>
+                                ) : (
+                                  <Badge className="bg-success text-success-foreground">Cash</Badge>
+                                )}
+                              </span>
+                            </TableCell>
                             <TableCell className="py-2 px-4 text-muted-foreground">{item.amount.toFixed(2)}</TableCell>
                             <TableCell className="py-2 px-4 text-muted-foreground">{item.profit.toFixed(2)}</TableCell>
                           </TableRow>
-                      ))}
+                        ))}
                     </>
                   ))
                 )}
@@ -280,10 +302,12 @@ const OrderSummary = () => {
           )}
         </CardContent>
       </Card>
-      <div className="flex justify-end space-x-8 mr-4">
-        <p>Total Amount: {data?.totalAmount.toFixed(2)}</p>
-        <p>Total Profit: {data?.totalProfit.toFixed(2)}</p>
-      </div>
+      {data && (
+        <div className="flex justify-end space-x-8 mr-4">
+          <p>Total Amount: {formatNumber(data?.totalAmount)}</p>
+          <p>Total Profit: {formatNumber(data?.totalProfit)}</p>
+        </div>
+      )}
     </div>
   );
 };

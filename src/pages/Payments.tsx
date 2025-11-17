@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { getPayments } from "@/api/payments/getPayments";
 import { format, startOfMonth, startOfWeek } from "date-fns";
 import { PaymentListResponse } from "@/entries/payment/payment-list-response";
+import { formatNumber } from "@/lib/decimalFormatter";
 
 const Payments = () => {
   const [dateFilter, setDateFilter] = useState("today");
@@ -273,9 +274,11 @@ const Payments = () => {
           )}
         </CardContent>
       </Card>
-      <div className="text-right mr-4">
-        <p>Total Amount: {total.toFixed(2)}</p>
-      </div>
+      {data && (
+        <div className="text-right mr-4">
+          <p>Total Amount: {formatNumber(total)}</p>
+        </div>
+      )}
     </div>
   );
 };
