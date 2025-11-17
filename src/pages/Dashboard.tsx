@@ -14,6 +14,7 @@ import { Bar, BarChart, CartesianGrid, Legend, Rectangle, ResponsiveContainer, T
 import { getSales } from "@/api/dashboard/getSales";
 import { Sale } from "@/entries/dashboard/sales";
 import { addDaysToDate, yyyyMMDD } from "@/lib/dateFormatter";
+import { formatNumber } from "@/lib/decimalFormatter";
 
 
 const Dashboard = () => {
@@ -123,50 +124,52 @@ const Dashboard = () => {
             </Card>
           </div>
         ) : (
-          <>
-            <Card className="shadow-card">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Categories</CardTitle>
-                <Building2 className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{summary?.totalCategories}</div>
-                {/* <div className="flex items-center space-x-2 text-xs">
+          summary && (
+            <>
+              <Card className="shadow-card">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Categories</CardTitle>
+                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{summary?.totalCategories}</div>
+                  {/* <div className="flex items-center space-x-2 text-xs">
               <Badge variant={stat.changeType === "positive" ? "default" : "destructive"} className="text-xs">
                 {stat.change}
               </Badge>
               <span className="text-muted-foreground">from last month</span>
             </div> */}
-              </CardContent>
-            </Card>
-            <Card className="shadow-card">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Total Products</CardTitle>
-                <Package className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{summary?.totalProducts}</div>
-              </CardContent>
-            </Card>
-            <Card className="shadow-card">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Total Products Value</CardTitle>
-                <BanknoteIcon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{summary?.totalProductsValue.toLocaleString()}</div>
-              </CardContent>
-            </Card>
-            <Card className="shadow-card">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Credit Orders</CardTitle>
-                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{summary?.totalCreditOrdersValue.toLocaleString()}</div>
-              </CardContent>
-            </Card>
-          </>
+                </CardContent>
+              </Card>
+              <Card className="shadow-card">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Products</CardTitle>
+                  <Package className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{summary?.totalProducts}</div>
+                </CardContent>
+              </Card>
+              <Card className="shadow-card">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Products Value</CardTitle>
+                  <BanknoteIcon className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{formatNumber(summary?.totalProductsValue)}</div>
+                </CardContent>
+              </Card>
+              <Card className="shadow-card">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Credit Orders</CardTitle>
+                  <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{formatNumber(summary?.totalCreditOrdersValue)}</div>
+                </CardContent>
+              </Card>
+            </>
+          )
         )}
       </div>
       <div className="grid grid-cols-1 gap-6">
