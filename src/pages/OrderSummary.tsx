@@ -242,7 +242,7 @@ const OrderSummary = () => {
                     <>
                       <TableRow key={order.date} className="border-b border-border hover:bg-muted/50">
                         <TableCell className="py-4 px-4 font-medium text-muted-foreground">
-                          <span className="">{order.date}</span>
+                          <span>{order.date}</span>
                           {order?.orders?.length > 0 &&
                             (order.isExpand ? (
                               <Button variant="ghost" size="sm" className="ml-1" onClick={() => onExpand(order.date, false)}>
@@ -256,7 +256,7 @@ const OrderSummary = () => {
                         </TableCell>
                         <TableCell className="py-4 px-4 text-muted-foreground">{order.orders?.length ? order.orders.length : order.orderNumber}</TableCell>
                         <TableCell className="py-4 px-4 text-muted-foreground">{order.amount.toFixed(2)}</TableCell>
-                        <TableCell className="py-4 px-4 text-muted-foreground">{order.profit.toFixed(2)}</TableCell>
+                        <TableCell className="py-4 px-4 font-bold text-muted-foreground">{order.profit.toFixed(2)}</TableCell>
                       </TableRow>
 
                       {order.isExpand &&
@@ -267,7 +267,7 @@ const OrderSummary = () => {
                             <TableCell className="py-2 px-4 text-muted-foreground">{item.amount.toFixed(2)}</TableCell>
                             <TableCell className="py-2 px-4 text-muted-foreground">{item.profit.toFixed(2)}</TableCell>
                           </TableRow>
-                        ))}
+                      ))}
                     </>
                   ))
                 )}

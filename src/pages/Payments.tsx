@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus,  Package, AlertCircle } from "lucide-react";
+import { Search, Plus,  Package, AlertCircle, ChevronUp, ChevronDown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PaginationWrapper } from "@/components/PaginationWrapper";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getPayments } from "@/api/payments/getPayments";
 import { format, startOfMonth, startOfWeek } from "date-fns";
+import { PaymentListResponse } from "@/entries/payment/payment-list-response";
 
 const Payments = () => {
   const [dateFilter, setDateFilter] = useState("today");
@@ -16,7 +17,7 @@ const Payments = () => {
   const [toDate, setToDate] = useState("");
   const [isInitial, setIsInitial] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [data, setData] = useState([]);
+   const [data, setData] = useState<PaymentListResponse | null>(null);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,25 +27,30 @@ const Payments = () => {
 
   useEffect(() => {
     if (isInitial){
-      fetchPayments(today, today);
+      fetchPayments(today, today,true);
     } 
   }, [isInitial]);
 
 
-  const fetchPayments = async (from: string, to: string) => {
+  const fetchPayments = async (from: string, to: string, isToday?: boolean) => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await getPayments({
+      const params: any = {
         fromDate: from,
         toDate: to,
-      });
+      };
+      if (!isToday) {
+        params.isRange = true;
+      }
 
-      setData(response.items);
+      const response = await getPayments(params);
+      setData(response);
       setTotal(response.totalAmount);
-      if(isInitial) setIsInitial(false);
+      if (isInitial) setIsInitial(false);
       handlePageChange(1);
+
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch payments");
     } finally {
@@ -56,7 +62,7 @@ const Payments = () => {
     setDateFilter(filter);
     switch (filter) {
       case "today": {
-         fetchPayments(today, today);
+         fetchPayments(today, today,true);
         break;
       }
       case "week": {
@@ -72,8 +78,25 @@ const Payments = () => {
     }
   };
 
-  const filteredData = data?.filter((payment) => payment.customer.toLowerCase().includes(searchQuery.toLowerCase()));
+   const onExpand = (date: string, isExpand: boolean) => {
+     setData((prev) =>
+       prev
+         ? {
+             ...prev,
+             items: prev.items.map((item) =>
+               item.date === date
+                 ? {
+                     ...item,
+                     isExpand: isExpand,
+                   }
+                 : item
+             ),
+           }
+         : prev
+     );
+   };
 
+  const filteredData = data?.isRange ? data.items : data?.items.filter((payment) => payment?.customer?.toLowerCase().includes(searchQuery.toLowerCase()));
   const totalPages = Math.ceil(filteredData?.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedData = filteredData?.slice(startIndex, startIndex + itemsPerPage);
@@ -152,8 +175,8 @@ const Payments = () => {
               <TableHeader>
                 <TableRow className="border-b border-border">
                   <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">Date</TableHead>
-                  <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">Receipt No</TableHead>
                   <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">Customer</TableHead>
+                  <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">{data?.isRange ? "Payments #" : "Receipt No"}</TableHead>
                   <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">Amount</TableHead>
                   <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">Balance</TableHead>
                 </TableRow>
@@ -207,18 +230,38 @@ const Payments = () => {
                   </TableRow>
                 ) : (
                   // order rows
-                  paginatedData?.map((order) => (
-                    <TableRow key={order.id} className="border-b border-border hover:bg-muted/50">
-                      <TableCell className="py-4 px-4">
-                        <div className="flex items-center gap-3">
-                          <span className="font-medium text-muted-foreground">{order.date}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-4 px-4 text-muted-foreground">{order.receiptNo}</TableCell>
-                      <TableCell className="py-4 px-4 text-muted-foreground">{order.customer}</TableCell>
-                      <TableCell className="py-4 px-4 text-muted-foreground">{order.amount}</TableCell>
-                      <TableCell className="py-4 px-4 text-muted-foreground">{order.balance}</TableCell>
-                    </TableRow>
+                  paginatedData?.map((item) => (
+                    <>
+                      <TableRow key={item.date} className="border-b border-border hover:bg-muted/50">
+                        <TableCell className="py-4 px-4">
+                          <span className="font-medium text-muted-foreground">{item.date}</span>
+                          {item?.payments?.length > 0 &&
+                            (item.isExpand ? (
+                              <Button variant="ghost" size="sm" className="ml-1" onClick={() => onExpand(item.date, false)}>
+                                <ChevronUp className="h-1 w-1" />
+                              </Button>
+                            ) : (
+                              <Button variant="ghost" size="sm" className="ml-1" onClick={() => onExpand(item.date, true)}>
+                                <ChevronDown className="h-1 w-1" />
+                              </Button>
+                            ))}
+                        </TableCell>
+                        <TableCell className="py-4 px-4 text-muted-foreground">{item.customer}</TableCell>
+                        <TableCell className="py-4 px-4 text-muted-foreground">{data?.isRange ? item.payments.length : item.receiptNo}</TableCell>
+                        <TableCell className="py-4 px-4 font-bold text-muted-foreground">{item.amount.toFixed(2)}</TableCell>
+                        <TableCell className="py-4 px-4 font-bold text-muted-foreground">{!data.isRange ? item.balance.toFixed(2) : ""}</TableCell>
+                      </TableRow>
+                      {item.isExpand &&
+                        item.payments?.map((payment) => (
+                          <TableRow key={`${item.date}_${payment.receiptNo}`} className="bg-muted/10">
+                            <TableCell className="py-2 px-4"></TableCell>
+                            <TableCell className="py-2 px-4 text-muted-foreground">{payment.customer}</TableCell>
+                            <TableCell className="py-2 px-4 text-muted-foreground">{payment.receiptNo}</TableCell>
+                            <TableCell className="py-2 px-4 text-muted-foreground">{payment.amount.toFixed(2)}</TableCell>
+                            <TableCell className="py-2 px-4 text-muted-foreground">{payment.balance.toFixed(2)}</TableCell>
+                          </TableRow>
+                        ))}
+                    </>
                   ))
                 )}
               </TableBody>
