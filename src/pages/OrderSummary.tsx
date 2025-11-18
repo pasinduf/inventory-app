@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus,  Package, AlertCircle, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, Plus,  Package, AlertCircle, ChevronRight, ChevronDown, ChevronUp, List } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PaginationWrapper } from "@/components/PaginationWrapper";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -12,6 +12,7 @@ import { getOrderSummary } from "@/api/orders/getOrderSummary";
 import { OrderSummaryListResponse } from "@/entries/order/order-summary-list-response";
 import { Badge } from "@/components/ui/badge";
 import { formatNumber } from "@/lib/decimalFormatter";
+import OrderDetailsDialog from "./components/order/OrderDetailsDialog";
 
 const OrderSummary = () => {
   const [dateFilter, setDateFilter] = useState("today");
@@ -187,8 +188,8 @@ const OrderSummary = () => {
                 <TableRow className="border-b border-border">
                   <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">Date</TableHead>
                   <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">Order #</TableHead>
-                  <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">Amount</TableHead>
-                  <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">Profit</TableHead>
+                  <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">Amount (Rs.)</TableHead>
+                  <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">Profit (Rs.)</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -247,12 +248,12 @@ const OrderSummary = () => {
                           <span>{order.date}</span>
                           {order?.orders?.length > 0 &&
                             (order.isExpand ? (
-                              <Button variant="ghost" size="sm" className="ml-1" onClick={() => onExpand(order.date, false)}>
-                                <ChevronUp className="h-1 w-1" />
+                              <Button variant="ghost" size="sm" className="ml-2 h-5 w-5 p-0" onClick={() => onExpand(order.date, false)}>
+                                <ChevronUp />
                               </Button>
                             ) : (
-                              <Button variant="ghost" size="sm" className="ml-1" onClick={() => onExpand(order.date, true)}>
-                                <ChevronDown className="h-1 w-1" />
+                              <Button variant="ghost" size="sm" className="ml-2 h-5 w-5 p-0" onClick={() => onExpand(order.date, true)}>
+                                <ChevronDown />
                               </Button>
                             ))}
                         </TableCell>
@@ -267,9 +268,18 @@ const OrderSummary = () => {
                               )}
                             </span>
                           )}
+                          {!data.isRange && (
+                            <span className="ml-6">
+                              <OrderDetailsDialog orderId={order.orderId} orderNumber={order.orderNumber}>
+                                <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
+                                  <List className="h-3 w-3 text-muted-foreground" />
+                                </Button>
+                              </OrderDetailsDialog>
+                            </span>
+                          )}
                         </TableCell>
-                        <TableCell className="py-4 px-4 text-muted-foreground">{order.amount.toFixed(2)}</TableCell>
-                        <TableCell className="py-4 px-4 font-bold text-muted-foreground">{order.profit.toFixed(2)}</TableCell>
+                        <TableCell className="py-4 px-4 text-muted-foreground">{formatNumber(order.amount)}</TableCell>
+                        <TableCell className="py-4 px-4 font-bold text-muted-foreground">{formatNumber(order.profit)}</TableCell>
                       </TableRow>
 
                       {order.isExpand &&
@@ -285,9 +295,16 @@ const OrderSummary = () => {
                                   <Badge className="bg-success text-success-foreground">Cash</Badge>
                                 )}
                               </span>
+                              <span className="ml-6">
+                                <OrderDetailsDialog orderId={item.orderId} orderNumber={item.orderNumber}>
+                                  <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
+                                    <List className="h-3 w-3 text-muted-foreground" />
+                                  </Button>
+                                </OrderDetailsDialog>
+                              </span>
                             </TableCell>
-                            <TableCell className="py-2 px-4 text-muted-foreground">{item.amount.toFixed(2)}</TableCell>
-                            <TableCell className="py-2 px-4 text-muted-foreground">{item.profit.toFixed(2)}</TableCell>
+                            <TableCell className="py-2 px-4 text-muted-foreground">{formatNumber(item.amount)}</TableCell>
+                            <TableCell className="py-2 px-4 text-muted-foreground">{formatNumber(item.profit)}</TableCell>
                           </TableRow>
                         ))}
                     </>

@@ -2,16 +2,21 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus,  Package, AlertCircle, ChevronUp, ChevronDown } from "lucide-react";
+import { Search, Plus,  Package, AlertCircle, ChevronUp, ChevronDown, ArrowRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PaginationWrapper } from "@/components/PaginationWrapper";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getPayments } from "@/api/payments/getPayments";
 import { format, startOfMonth, startOfWeek } from "date-fns";
-import { PaymentListResponse } from "@/entries/payment/payment-list-response";
+import { PaymentDto, PaymentListResponse } from "@/entries/payment/payment-list-response";
 import { formatNumber } from "@/lib/decimalFormatter";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import OrderDetailsDialog from "./components/order/OrderDetailsDialog";
+import OrderPaymentsDialog from "./components/order/OrderPaymentsDialog";
+import { useNavigate } from "react-router-dom";
 
 const Payments = () => {
+  const navigate = useNavigate();
   const [dateFilter, setDateFilter] = useState("today");
   const [searchQuery, setSearchQuery] = useState("");
   const [fromDate, setFromDate] = useState("");
@@ -22,6 +27,8 @@ const Payments = () => {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [payment, setPayment] = useState<PaymentDto | null>(null);
+  const [openView, setOpenView] = useState(false);
 
   const today = format(new Date(), "yyyy-MM-dd");
   const itemsPerPage = 10;
@@ -106,6 +113,16 @@ const Payments = () => {
     setCurrentPage(page);
   };
 
+  const onOpenChangeView = (open: boolean) => {
+    setOpenView(open);
+    setPayment(null);
+  };
+
+
+  const navigateToDetails=(id:number)=>{
+    window.open(`/credit-order/${id}`, "_blank");
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -177,7 +194,7 @@ const Payments = () => {
                 <TableRow className="border-b border-border">
                   <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">Date</TableHead>
                   <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">Customer</TableHead>
-                  <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">{data?.isRange ? "Payments #" : "Receipt No"}</TableHead>
+                  <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">Receipt #</TableHead>
                   <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">Amount</TableHead>
                   <TableHead className="text-left py-3 px-4 font-medium text-muted-foreground">Balance</TableHead>
                 </TableRow>
@@ -235,31 +252,84 @@ const Payments = () => {
                     <>
                       <TableRow key={item.date} className="border-b border-border hover:bg-muted/50">
                         <TableCell className="py-4 px-4">
-                          <span className="font-medium text-muted-foreground">{item.date}</span>
+                          <span className="font-medium text-muted-foreground">
+                            {item.date}
+                            {!data.isRange && (
+                              <span className="ml-4">
+                                <OrderDetailsDialog orderId={item.orderId} orderNumber={item.orderNumber}>
+                                  <Button variant="outline" size="sm">
+                                    {item.orderNumber}
+                                  </Button>
+                                </OrderDetailsDialog>
+                              </span>
+                            )}
+                          </span>
                           {item?.payments?.length > 0 &&
                             (item.isExpand ? (
-                              <Button variant="ghost" size="sm" className="ml-1" onClick={() => onExpand(item.date, false)}>
-                                <ChevronUp className="h-1 w-1" />
+                              <Button variant="ghost" size="sm" className="ml-2 h-5 w-5 p-0" onClick={() => onExpand(item.date, false)}>
+                                <ChevronUp />
                               </Button>
                             ) : (
-                              <Button variant="ghost" size="sm" className="ml-1" onClick={() => onExpand(item.date, true)}>
-                                <ChevronDown className="h-1 w-1" />
+                              <Button variant="ghost" size="sm" className="ml-2 h-5 w-5 p-0" onClick={() => onExpand(item.date, true)}>
+                                <ChevronDown />
                               </Button>
                             ))}
                         </TableCell>
-                        <TableCell className="py-4 px-4 text-muted-foreground">{item.customer}</TableCell>
+                        <TableCell className="py-4 px-4 text-muted-foreground">
+                          {item.customer?.length > 20 ? (
+                            <HoverCard>
+                              <HoverCardTrigger asChild>
+                                <span>{item.customer?.substring(0, 20)}</span>
+                              </HoverCardTrigger>
+                              <HoverCardContent className="w-80">
+                                <p className="text-sm">{item.customer}</p>
+                              </HoverCardContent>
+                            </HoverCard>
+                          ) : (
+                            <span>{item.customer}</span>
+                          )}
+                          {!data.isRange && (
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 ml-2" onClick={() => navigateToDetails(item.creditOrderId)}>
+                              <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                            </Button>
+                          )}
+                        </TableCell>
                         <TableCell className="py-4 px-4 text-muted-foreground">{data?.isRange ? item.payments.length : item.receiptNo}</TableCell>
-                        <TableCell className="py-4 px-4 font-bold text-muted-foreground">{item.amount.toFixed(2)}</TableCell>
-                        <TableCell className="py-4 px-4 font-bold text-muted-foreground">{!data.isRange ? item.balance.toFixed(2) : ""}</TableCell>
+                        <TableCell className="py-4 px-4 font-bold text-muted-foreground">{formatNumber(item.amount)}</TableCell>
+                        <TableCell className="py-4 px-4 font-bold text-muted-foreground">{!data.isRange ? formatNumber(item.balance) : ""}</TableCell>
                       </TableRow>
                       {item.isExpand &&
                         item.payments?.map((payment) => (
                           <TableRow key={`${item.date}_${payment.receiptNo}`} className="bg-muted/10">
-                            <TableCell className="py-2 px-4"></TableCell>
-                            <TableCell className="py-2 px-4 text-muted-foreground">{payment.customer}</TableCell>
+                            <TableCell className="py-2 px-4">
+                              <OrderDetailsDialog orderId={payment.orderId} orderNumber={payment.orderNumber}>
+                                <Button variant="outline" size="sm">
+                                  {payment.orderNumber}
+                                </Button>
+                              </OrderDetailsDialog>
+                            </TableCell>
+                            <TableCell className="py-2 px-4 text-muted-foreground">
+                              {payment.customer?.substring(0, 20)}
+                              <span>
+                                {/* <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="ml-2 h-5 w-5 p-0"
+                                  onClick={() => {
+                                    setOpenView(true);
+                                    setPayment(payment);
+                                  }}
+                                >
+                                  <Package />
+                                </Button> */}
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 ml-2" onClick={() => navigateToDetails(payment.creditOrderId)}>
+                                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                                </Button>
+                              </span>
+                            </TableCell>
                             <TableCell className="py-2 px-4 text-muted-foreground">{payment.receiptNo}</TableCell>
-                            <TableCell className="py-2 px-4 text-muted-foreground">{payment.amount.toFixed(2)}</TableCell>
-                            <TableCell className="py-2 px-4 text-muted-foreground">{payment.balance.toFixed(2)}</TableCell>
+                            <TableCell className="py-2 px-4 text-muted-foreground">{formatNumber(payment.amount)}</TableCell>
+                            <TableCell className="py-2 px-4 text-muted-foreground">{formatNumber(payment.balance)}</TableCell>
                           </TableRow>
                         ))}
                     </>
@@ -279,6 +349,7 @@ const Payments = () => {
           <p>Total Amount: {formatNumber(total)}</p>
         </div>
       )}
+      {/* {payment && <OrderPaymentsDialog orderId={payment.creditOrderId} customer={payment?.customer} open={openView} onOpenChange={onOpenChangeView} />} */}
     </div>
   );
 };

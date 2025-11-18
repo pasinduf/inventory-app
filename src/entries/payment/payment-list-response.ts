@@ -16,6 +16,9 @@ export class PaymentSummaryDto {
   balance: number;
   receiptNo: string;
   payments: PaymentDto[];
+  orderId?: number;
+  orderNumber?: string;
+  creditOrderId?: number;
   isExpand: boolean;
 }
 
@@ -25,4 +28,7 @@ export class PaymentDto {
   receiptNo: string;
   amount: number;
   balance: number;
+  orderId: number;
+  orderNumber: string;
+  creditOrderId:number;
 }

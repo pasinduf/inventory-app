@@ -6,6 +6,8 @@ import { Package,AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getOrderDetails } from "@/api/orders/getOrderDetails";
 import { getDate, getTime, yyyyMMDD } from "@/lib/dateFormatter";
+import { Badge } from "@/components/ui/badge";
+import { formatNumber } from "@/lib/decimalFormatter";
 
 
 interface Props {
@@ -60,6 +62,13 @@ const OrderDetailsDialog = ({ orderId, orderNumber, children }: Props) => {
             <DialogDescription>
               <div className="ml-7">
                 Date: {getDate(order.createdAt)} {getTime(order?.createdAt)}
+                <div className="mt-1">
+                  {order.isCreditOrder ? (
+                    <Badge className="bg-warning text-warning-foreground">Credit</Badge>
+                  ) : (
+                    <Badge className="bg-success text-success-foreground">Cash</Badge>
+                  )}
+                </div>
               </div>
             </DialogDescription>
           )}
@@ -148,7 +157,7 @@ const OrderDetailsDialog = ({ orderId, orderNumber, children }: Props) => {
                         <div className="flex items-center justify-end gap-1">{item.discount}</div>
                       </TableCell>
                       <TableCell className="text-right text-muted-foreground">
-                        <div className="flex items-center justify-end gap-1">{item.amount}</div>
+                        <div className="flex items-center justify-end gap-1">{formatNumber(item.amount)}</div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -157,9 +166,9 @@ const OrderDetailsDialog = ({ orderId, orderNumber, children }: Props) => {
                     <TableRow>
                       <TableCell>Total</TableCell>
                       <TableCell colSpan={2}></TableCell>
-                      <TableCell className="text-right text-muted-foreground">{order.grossAmount}</TableCell>
-                      <TableCell className="text-right text-muted-foreground">{order.discount}</TableCell>
-                      <TableCell className="text-right">{order.netAmount}</TableCell>
+                      <TableCell className="text-right text-muted-foreground">{formatNumber(order.grossAmount)}</TableCell>
+                      <TableCell className="text-right text-muted-foreground">{formatNumber(order.discount)}</TableCell>
+                      <TableCell className="text-right">{formatNumber(order.netAmount)}</TableCell>
                     </TableRow>
                   )}
                 </>

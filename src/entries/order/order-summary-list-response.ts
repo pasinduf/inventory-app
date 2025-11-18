@@ -11,6 +11,7 @@ export class OrderSummaryListResponse {
 
 export class OrderDaySummaryDto {
   date: string;
+  orderId:number;
   orderNumber: string;
   amount: number;
   profit: number;
@@ -21,8 +22,9 @@ export class OrderDaySummaryDto {
 
 
 export class OrderSummaryDto {
+  orderId: number;
   orderNumber: string;
-  isCreditOrder:boolean;
+  isCreditOrder: boolean;
   amount: number;
   profit: number;
 }

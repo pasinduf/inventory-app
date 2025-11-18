@@ -273,7 +273,20 @@ const CreditOrders = () => {
                           </Button>
                         </OrderDetailsDialog>
                       </TableCell>
-                      <TableCell className="py-4 px-4 text-muted-foreground">{order.customer}</TableCell>
+                      <TableCell className="py-4 px-4 text-muted-foreground">
+                        {order.customer?.length > 20 ? (
+                          <HoverCard>
+                            <HoverCardTrigger asChild>
+                              <span>{order.customer?.substring(0, 20)}</span>
+                            </HoverCardTrigger>
+                            <HoverCardContent className="w-80">
+                              <p className="text-sm">{order.customer}</p>
+                            </HoverCardContent>
+                          </HoverCard>
+                        ) : (
+                          <span>{order.customer}</span>
+                        )}
+                      </TableCell>
                       <TableCell className="py-4 px-4 text-muted-foreground">{order.amount}</TableCell>
                       <TableCell className="py-4 px-4 text-muted-foreground">{order.downPayment}</TableCell>
                       <TableCell className="py-4 px-4 text-muted-foreground">
@@ -355,9 +368,7 @@ const CreditOrders = () => {
               </TableBody>
             </Table>
 
-            {order &&
-             <UpdateCreditOrderDialog creditOrder={order} open={openEdit} onOpenChange={onOpenChangeEdit} />
-            }
+            {order && <UpdateCreditOrderDialog creditOrder={order} open={openEdit} onOpenChange={onOpenChangeEdit} />}
             <OrderPaymentsDialog orderId={order?.id} customer={order?.customer} open={openView} onOpenChange={onOpenChangeView} />
             <AddPaymentDialog order={order} customer={order?.customer} open={openAdd} onOpenChange={onOpenChangeAdd} />
           </div>
