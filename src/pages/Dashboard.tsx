@@ -194,21 +194,21 @@ const Dashboard = () => {
                   width={500}
                   height={300}
                   data={sales}
-                  // margin={{
-                  //   top: 5,
-                  //   right: 30,
-                  //   left: 20,
-                  //   bottom: 5,
-                  // }}
+                  margin={{
+                   //top: 5,
+                   //right: 30,
+                   //left: 20,
+                    bottom: 10,
+                  }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
+                  <Legend verticalAlign="top" align="center" />
+                  <XAxis dataKey="date" interval={0} angle={-45} textAnchor="end" tickFormatter={(val) => val.slice(5)} />
                   <YAxis />
                   <Tooltip cursor={{ fill: "transparent" }} />
                   <Legend />
                   <Bar dataKey="instantSales" fill="#8884d8" name="Instant Orders" barSize={20} />
                   <Bar dataKey="creditPayments" fill="#82ca9d" name="Credit Payments" barSize={20} />
-                  {/* <Bar dataKey="uv" fill="#82ca9d" activeBar={<Rectangle fill="gold" stroke="purple" />} /> */}
                 </BarChart>
               </ResponsiveContainer>
             </div>
