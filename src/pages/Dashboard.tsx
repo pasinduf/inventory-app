@@ -4,7 +4,9 @@ import {
   AlertTriangle, 
   Building2,
   BanknoteIcon,
-  AlertCircle
+  AlertCircle,
+  TrendingUp,
+  ArrowUpRight
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getSummary } from "@/api/dashboard/getSummary";
@@ -15,7 +17,8 @@ import { getSales } from "@/api/dashboard/getSales";
 import { Sale } from "@/entries/dashboard/sales";
 import { addDaysToDate, yyyyMMDD } from "@/lib/dateFormatter";
 import { formatNumber } from "@/lib/decimalFormatter";
-
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const Dashboard = () => {
 
@@ -31,7 +34,7 @@ const Dashboard = () => {
  const [chartType, setChartType] = useState("week");
  const now = new Date();
  const cardsPerPage = 4;
-
+ const lowStocks = 5;
 
   useEffect(() => {
     fetchSummary();
@@ -172,7 +175,7 @@ const Dashboard = () => {
           )
         )}
       </div>
-      <div className="grid grid-cols-1 gap-6">
+      {/* <div className="grid grid-cols-1 gap-6">
         <Card className="lg:col-span-2 shadow-card">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2">Recent Sales</CardTitle>
@@ -195,9 +198,9 @@ const Dashboard = () => {
                   height={300}
                   data={sales}
                   margin={{
-                   //top: 5,
-                   //right: 30,
-                   //left: 20,
+                    //top: 5,
+                    //right: 30,
+                    //left: 20,
                     bottom: 10,
                   }}
                 >
@@ -214,8 +217,86 @@ const Dashboard = () => {
             </div>
           </CardContent>
         </Card>
+      </div> */}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2 shadow-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Recent Sales
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  width={500}
+                  height={300}
+                  data={sales}
+                  margin={{
+                    //top: 5,
+                    //right: 30,
+                    //left: 20,
+                    bottom: 10,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <Legend verticalAlign="top" align="center" />
+                  <XAxis dataKey="date" interval={0} angle={-45} textAnchor="end" tickFormatter={(val) => val.slice(5)} />
+                  <YAxis />
+                  <Tooltip cursor={{ fill: "transparent" }} />
+                  <Legend />
+                  <Bar dataKey="instantSales" fill="#8884d8" name="Instant Orders" barSize={20} />
+                  <Bar dataKey="creditPayments" fill="#82ca9d" name="Credit Payments" barSize={20} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {loadingSummary
+          ? Array.from({ length: 1 }).map((_, index) => (
+              <Card key={index} className="shadow-card">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <Skeleton className="h-8 w-24" />
+                  <Skeleton className="h-8 w-8" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-8 w-8" />
+                </CardContent>
+              </Card>
+            ))
+          : summary && (
+              <Card className="shadow-card  h-[60vh] overflow-hidden">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-warning" />
+                    Low Stocks
+                  </CardTitle>
+                </CardHeader>
+                <ScrollArea className="h-[calc(60vh-80px)]">
+                  <CardContent>
+                    <div className="space-y-4">
+                      {summary.outOfStock?.map((product, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                          <div className="space-y-1">
+                            <p className="font-medium">{product.name}</p>
+                            <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
+                          </div>
+                          <div className="text-right space-y-1">
+                            <Badge variant="destructive">Out of Stock</Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </ScrollArea>
+              </Card>
+            )}
       </div>
 
+      {/* previous layout */}
       {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2 shadow-card">
           <CardHeader className="flex flex-row items-center justify-between">
@@ -223,31 +304,30 @@ const Dashboard = () => {
               <AlertTriangle className="h-5 w-5 text-warning" />
               Low Stock Alert
             </CardTitle>
-            <Button variant="outline" size="sm">
+             <Button variant="outline" size="sm">
               View All
               <ArrowUpRight className="h-4 w-4 ml-1" />
             </Button>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {lowStockProducts.map((product) => (
-                <div key={product.sku} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              {[1, 2].map((product, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <div className="space-y-1">
-                    <p className="font-medium">{product.name}</p>
-                    <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
+                    <p className="font-medium">name</p>
+                    <p className="text-sm text-muted-foreground">SKU:</p>
                   </div>
                   <div className="text-right space-y-1">
                     <Badge variant="destructive" className="text-xs">
-                      {product.current}/{product.minimum}
+                      0
                     </Badge>
-                    <p className="text-xs text-muted-foreground">{product.category}</p>
+                    <p className="text-xs text-muted-foreground">category</p>
                   </div>
                 </div>
               ))}
             </div>
           </CardContent>
         </Card>
-
 
         <Card className="shadow-card">
           <CardHeader>
@@ -258,13 +338,12 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentActivity.map((activity, index) => (
+              {[1, 2].map((activity, index) => (
                 <div key={index} className="flex items-start space-x-3">
                   <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
                   <div className="space-y-1 flex-1">
-                    <p className="text-sm font-medium">{activity.action}</p>
-                    <p className="text-sm text-muted-foreground">{activity.item}</p>
-                    <p className="text-xs text-muted-foreground">{activity.time}</p>
+                    <p className="text-sm font-medium">action</p>
+                    <p className="text-sm text-muted-foreground">item</p>
                   </div>
                 </div>
               ))}
