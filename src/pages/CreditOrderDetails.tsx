@@ -32,7 +32,7 @@ const CreditOrderDetails = () => {
   const [error, setError] = useState<string | null>(null);
   const [openAdd, setOpenAdd] = useState(false);
   const [paymentResponse, setPaymentResponse] = useState<PaymentReceipt | null>(null);
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
 
 
    useEffect(() => {

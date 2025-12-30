@@ -25,7 +25,7 @@ const Suppliers = () => {
 
    const [open, setOpen] = useState(false);
    const [supplier, setSupplier] = useState(null);
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
 
 
   useEffect(() => {
