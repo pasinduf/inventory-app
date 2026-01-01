@@ -28,6 +28,7 @@ const Orders = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingPrint, setLoadingPrint] = useState(true);
   const [error, setError] = useState<string | null>(null);
    const [orderResponse, setOrderResponse] = useState<CreateOrderResponse | null>(null);
   const itemsPerPage = 30;
@@ -97,7 +98,7 @@ const Orders = () => {
 
   const getPrintDetails=async (id:number)=>{
     try {
-          setLoading(true);
+          setLoadingPrint(true);
           setError(null);
           const response = await printOrder(id);
           setOrderResponse(response);
@@ -107,7 +108,7 @@ const Orders = () => {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch print order details");
     } finally {
-      setLoading(false);
+      setLoadingPrint(false);
     }
   }
 
@@ -314,7 +315,7 @@ const Orders = () => {
       </Card>
 
       <div className="hidden">
-        {!loading && orderResponse && <OrderReceipt orderResponse={orderResponse} />}
+        {!loadingPrint && orderResponse && <OrderReceipt orderResponse={orderResponse} />}
       </div>
 
     </div>
