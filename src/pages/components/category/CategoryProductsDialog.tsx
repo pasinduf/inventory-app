@@ -152,7 +152,7 @@ const CategoryProductsDialog = ({ category, children }: Props) => {
                     <TableCell>
                       <div className="flex items-center gap-1 text-muted-foreground">
                         <Calendar className="h-3 w-3" />
-                        {new Date(product.addedDate).toLocaleDateString()}
+                        {product.addedDate ? new Date(product.addedDate).toLocaleDateString() : "N/A"}
                       </div>
                     </TableCell>
                   </TableRow>
