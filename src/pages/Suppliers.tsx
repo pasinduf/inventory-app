@@ -11,9 +11,12 @@ import ConfirmDialog from "@/components/ui/confirm-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { deleteSupplier } from "@/api/supplier/deleteSupplier";
 import { DEFAULT_ERROR_MESSAGE } from "@/api/const";
+import { getSupplierOptions } from "@/api/supplier/getOptions";
+import { useAppStore } from "@/hooks/useAppStore";
 
 const Suppliers = () => {
 
+  const { store, setStore }: any = useAppStore();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [suppliers, setSuppliers] = useState([]);
@@ -22,7 +25,7 @@ const Suppliers = () => {
 
    const [open, setOpen] = useState(false);
    const [supplier, setSupplier] = useState(null);
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
 
 
   useEffect(() => {
@@ -53,6 +56,11 @@ const Suppliers = () => {
           title: `Supplier Deleted Successfully`,
         });
         fetchSuppliers();
+        const list = await getSupplierOptions();
+        setStore({
+          ...store,
+          suppliers: list,  
+        });
       }
     } catch (error: any) {
       toast({

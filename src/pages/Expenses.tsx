@@ -25,7 +25,7 @@ const Expenses = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
 
   const [open, setOpen] = useState(false);
   const [expense, setExpense] = useState(null);

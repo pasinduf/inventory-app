@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { addDaysToDate, yyyyMMDD } from "@/lib/dateFormatter";
 import { Button } from "@/components/ui/button";
-import { OrderInputs, OrderResponse } from "@/entries/order/order";
+import { CreateOrderResponse, OrderInputs, OrderResponse } from "@/entries/order/order";
 import { createOrder } from "@/api/orders/createOrder";
 import { useToast } from "@/hooks/use-toast";
 import { DEFAULT_ERROR_MESSAGE } from "@/api/const";
@@ -39,7 +39,7 @@ interface Order {
 
 interface Props {
   open: boolean;
-  onOpenChange: (open: boolean, orderResponse?: OrderResponse) => void;
+  onOpenChange: (open: boolean, orderResponse?: CreateOrderResponse) => void;
   order: Order;
 }
 
@@ -134,10 +134,10 @@ const OrderConfirmDialog = ({ open, onOpenChange, order }: Props) => {
 
       const result = await createOrder(payload);
       if (result && result.status) {
-        onOpenChange(false, result.order);
+        onOpenChange(false, result);
         toast({
           variant: "success",
-          title: `Order ${result.order?.orderNumber} Created Successfully!!`,
+          title: `Order Created Successfully!!`,
         });
       }
     } catch (error: any) {
@@ -316,6 +316,7 @@ const OrderConfirmDialog = ({ open, onOpenChange, order }: Props) => {
                       value={selectedCustomer}
                       onChange={(product) => setSelectedCustomer(product)}
                       styles={customStyles}
+                      placeholder="Search customer..."
                     />
                   </div>
 

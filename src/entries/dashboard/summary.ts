@@ -3,4 +3,10 @@ export class Summary {
   totalProducts: number;
   totalProductsValue: number;
   totalCreditOrdersValue: number;
+  outOfStock: LowStockItem[];
 }
+
+export class LowStockItem {
+  name: string;
+  sku: string;
+}  

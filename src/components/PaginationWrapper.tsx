@@ -8,7 +8,38 @@ interface PaginationWrapperProps {
 }
 
 export const PaginationWrapper = ({ currentPage, totalPages, onPageChange, className = "" }: PaginationWrapperProps) => {
+  
   if (totalPages <= 1) return null;
+
+  const getVisiblePages = (
+    currentPage: number,
+    totalPages: number,
+    delta = 3 // how many pages before & after current page
+  ) => {
+    const pages: (number | "dots")[] = [];
+    const rangeStart = Math.max(2, currentPage - delta);
+    const rangeEnd = Math.min(totalPages - 1, currentPage + delta);
+
+    pages.push(1);
+
+    if (rangeStart > 2) {
+      pages.push("dots");
+    }
+
+    for (let i = rangeStart; i <= rangeEnd; i++) {
+      pages.push(i);
+    }
+
+    if (rangeEnd < totalPages - 1) {
+      pages.push("dots");
+    }
+
+    if (totalPages > 1) {
+      pages.push(totalPages);
+    }
+
+    return pages;
+  };
 
   return (
     <div className={`flex justify-center ${className}`}>
@@ -24,7 +55,7 @@ export const PaginationWrapper = ({ currentPage, totalPages, onPageChange, class
               className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
             />
           </PaginationItem>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+          {/* {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
             <PaginationItem key={page}>
               <PaginationLink
                 href="#"
@@ -36,6 +67,25 @@ export const PaginationWrapper = ({ currentPage, totalPages, onPageChange, class
               >
                 {page}
               </PaginationLink>
+            </PaginationItem>
+          ))} */}
+
+          {getVisiblePages(currentPage, totalPages).map((page, index) => (
+            <PaginationItem key={index}>
+              {page === "dots" ? (
+                <span className="px-2 text-muted-foreground">…</span>
+              ) : (
+                <PaginationLink
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onPageChange(page);
+                  }}
+                  isActive={page === currentPage}
+                >
+                  {page}
+                </PaginationLink>
+              )}
             </PaginationItem>
           ))}
 

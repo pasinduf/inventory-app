@@ -9,16 +9,16 @@ import { DEFAULT_ERROR_MESSAGE } from "@/api/const";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 import { yyyyMMDD } from "@/lib/dateFormatter";
-import { CreditOrderPayment } from "@/entries/payment/payment";
+import { CreditOrderPayment, PaymentReceipt } from "@/entries/payment/payment";
 import { updatePayment } from "@/api/payments/updatePayment";
 import { addPayment } from "@/api/payments/addPayment";
 import { CreditOrder } from "@/entries/order/order";
 
 interface Props {
   order: CreditOrder;
-  customer: string;
   open: boolean;
-  onOpenChange: (refresh: boolean, open: boolean) => void;
+  onOpenChange: (refresh: boolean, open: boolean, response?: PaymentReceipt) => void;
+  customer?: string;
   payment?: CreditOrderPayment;
 }
 
@@ -30,7 +30,7 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-export function AddPaymentDialog({ order, customer,open, onOpenChange, payment }: Props) {
+export function AddPaymentDialog({ order ,customer,open, onOpenChange, payment }: Props) {
   const { toast } = useToast();
   const [submitting, setSubmitting] = useState(false);
   const today = new Date();
@@ -59,7 +59,7 @@ export function AddPaymentDialog({ order, customer,open, onOpenChange, payment }
     try {
       const result = payment ? await updatePayment(order.id, payload) : await addPayment(payload);
       if (result) {
-        onOpenChange(true, false);
+        onOpenChange(true, false, result);
         toast({
           variant: "success",
           title: `Payment ${payment ? "Updated" : "Added"} Successfully`,
@@ -77,7 +77,7 @@ export function AddPaymentDialog({ order, customer,open, onOpenChange, payment }
 
   const onClose = () => {
     reset();
-    onOpenChange(false, false);
+    onOpenChange(false, false, null);
   };
 
   return (
@@ -87,7 +87,7 @@ export function AddPaymentDialog({ order, customer,open, onOpenChange, payment }
         if (!isOpen) {
           reset();
         }
-        onOpenChange(false, false);
+        onOpenChange(false, false, null);
       }}
     >
       <DialogContent className="sm:max-w-[400px]">

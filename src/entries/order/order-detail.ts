@@ -6,6 +6,7 @@ export class OrderDetail {
   grossAmount: string;
   discount: string;
   netAmount: string;
+  isCreditOrder:boolean;
   orderItems: OrderItem[];
 }
 

@@ -26,9 +26,12 @@ import { useToast } from "@/hooks/use-toast";
 import { DEFAULT_ERROR_MESSAGE } from "@/api/const";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AddProductDialog } from "./components/product/AddProductDialog";
+import { getCategoryOptions } from "@/api/category/getOptions";
+import { useAppStore } from "@/hooks/useAppStore";
 
 const Categories = () => {
 
+  const { store, setStore }: any = useAppStore();
   const { toast } = useToast();
   const [data,setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -74,6 +77,11 @@ const Categories = () => {
           title: `Category Deleted Successfully`,
         });
         fetchCategories();
+         const list = await getCategoryOptions();
+          setStore({
+            ...store,
+            categories: list,
+          });
       }
     } catch (error: any) {
       toast({
@@ -164,7 +172,7 @@ const Categories = () => {
                       <CardTitle className="text-lg">{category.name}</CardTitle>
                       <Badge variant="secondary" className="mt-1 text-sm text-muted-foreground">
                         <Package className="h-3 w-3 mr-1" />
-                        {category.productCount} products
+                        {category.productCount} {category.productCount > 1 ? "products" : "product"}
                       </Badge>
                     </div>
                   </div>
@@ -187,7 +195,7 @@ const Categories = () => {
 
                       <ConfirmDialog
                         title="Delete Category"
-                        description={`Are you sure you want to delete the "${category.name}" category?`}
+                        description={`Are you sure you want to delete the "${category.name}" category, with existing ${category.productCount} products?`}
                         confirmText="Delete"
                         variant="destructive"
                         onConfirm={() => onDeleteCategory(category.id)}

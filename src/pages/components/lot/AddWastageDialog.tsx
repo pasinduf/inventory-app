@@ -24,7 +24,7 @@ interface Props {
 const schema = z.object({
   date: z.string().min(1, "Date is required"),
   reason: z.string().min(1, "Reason is required"),
-  quantity: z.number().min(0, "Quantity must be positive"),
+  quantity: z.number().min(0.01, "Enter valid Quantity"),
   lotId: z.number().min(0, ""),
 });
 

@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus,  Package, AlertCircle,View, EyeIcon, List } from "lucide-react";
+import { Search, Plus,  Package, AlertCircle,View, EyeIcon, List, Trash2, MoreHorizontal, PrinterIcon } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { yyyyMMDD } from "@/lib/dateFormatter";
@@ -10,11 +11,16 @@ import { PaginationWrapper } from "@/components/PaginationWrapper";
 import { getOrders } from "@/api/orders/getOrders";
 import { Badge } from "@/components/ui/badge";
 import OrderDetailsDialog from "./components/order/OrderDetailsDialog";
-import { useNavigate } from "react-router-dom";
+import ConfirmDialog from "@/components/ui/confirm-dialog";
+import { deleteOrder } from "@/api/orders/deleteOrder";
+import { DEFAULT_ERROR_MESSAGE } from "@/api/const";
+import { printOrder } from "@/api/orders/printOrder";
+import { CreateOrderResponse } from "@/entries/order/order";
+import OrderReceipt from "./components/order/OrderReceipt";
 
 const Orders = () => {
 
-  const navigate = useNavigate();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -22,8 +28,10 @@ const Orders = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingPrint, setLoadingPrint] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const itemsPerPage = 5;
+   const [orderResponse, setOrderResponse] = useState<CreateOrderResponse | null>(null);
+  const itemsPerPage = 30;
 
   useEffect(() => {
     const now = new Date();
@@ -59,6 +67,24 @@ const Orders = () => {
     }
   };
 
+   const onDeleteOrder= async (id)=>{
+      try {
+        const result = await deleteOrder(id);
+        if (result) {
+          toast({
+            variant: "success",
+            title: `Order Deleted Successfully`,
+          });
+          fetchOrders();
+        }
+      } catch (error: any) {
+        toast({
+          variant: "destructive",
+          title: `${(error as any)?.response?.data?.message || DEFAULT_ERROR_MESSAGE}`,
+        });
+      }
+    }
+
 
   const filteredData = data?.filter((order) => order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()));
 
@@ -69,6 +95,45 @@ const Orders = () => {
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
+
+  const getPrintDetails=async (id:number)=>{
+    try {
+          setLoadingPrint(true);
+          setError(null);
+          const response = await printOrder(id);
+          setOrderResponse(response);
+          setTimeout(() => {
+            handlePrint();
+          }, 1000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch print order details");
+    } finally {
+      setLoadingPrint(false);
+    }
+  }
+
+   const handlePrint = () => {
+     const printContent = document.getElementById("order_receipt")?.innerHTML;
+     const printWindow = window.open("", "", "width=600,height=800");
+     if (printWindow && printContent) {
+       printWindow.document.write(`
+      <html>
+        <head>
+          <style>
+            body { font-family: monospace; padding: 10px; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border-bottom: 1px solid #ddd; padding: 4px; }
+            th { text-align: left; }
+            .text-right { text-align: right; }
+          </style>
+        </head>
+        <body>${printContent}</body>
+      </html>
+    `);
+       printWindow.document.close();
+       printWindow.print();
+     }
+   };
 
 
 
@@ -194,7 +259,13 @@ const Orders = () => {
                       <td className="py-4 px-4 text-muted-foreground">{order.amount}</td>
                       <td className="py-4 px-4 text-muted-foreground">{order.discount}</td>
 
-                      <td className="py-4 px-4">{order.isCreditOrder && <Badge className="bg-warning text-warning-foreground">Credit</Badge>}</td>
+                      <td className="py-4 px-4">
+                        {order.isCreditOrder ? (
+                          <Badge className="bg-warning text-warning-foreground">Credit</Badge>
+                        ) : (
+                          <Badge className="bg-success text-success-foreground">Cash</Badge>
+                        )}
+                      </td>
 
                       <td className="py-4 px-4 text-right">
                         <OrderDetailsDialog orderId={order.id} orderNumber={order.orderNumber}>
@@ -202,6 +273,33 @@ const Orders = () => {
                             <List className="h-3 w-3 text-muted-foreground" />
                           </Button>
                         </OrderDetailsDialog>
+                      </td>
+                      <td>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => getPrintDetails(order.id)}>
+                              <PrinterIcon className="h-4 w-4 mr-2" />
+                              Print 
+                            </DropdownMenuItem>
+                            <ConfirmDialog
+                              title="Delete Order"
+                              description="Are you sure you want to delete this order?"
+                              confirmText="Delete"
+                              variant="destructive"
+                              onConfirm={() => onDeleteOrder(order.id)}
+                            >
+                              <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete Order
+                              </DropdownMenuItem>
+                            </ConfirmDialog>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </td>
                     </tr>
                   ))
@@ -215,6 +313,11 @@ const Orders = () => {
           )}
         </CardContent>
       </Card>
+
+      <div className="hidden">
+        {!loadingPrint && orderResponse && <OrderReceipt orderResponse={orderResponse} />}
+      </div>
+
     </div>
   );
 };

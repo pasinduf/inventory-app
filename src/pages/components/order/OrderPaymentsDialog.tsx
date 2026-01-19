@@ -48,9 +48,7 @@ const OrderPaymentsDialog = ({ open, onOpenChange, orderId, customer }: Props) =
       {/* <DialogTrigger asChild>{children}</DialogTrigger> */}
       <DialogContent className="max-w-xl max-h-[80vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            Order Payments
-          </DialogTitle>
+          <DialogTitle className="flex items-center gap-2">Credit Payments</DialogTitle>
 
           <DialogDescription>
             <div className="mt-1">{customer}</div>
@@ -62,6 +60,7 @@ const OrderPaymentsDialog = ({ open, onOpenChange, orderId, customer }: Props) =
             <TableHeader>
               <TableRow>
                 <TableHead className="text-left">Date</TableHead>
+                <TableHead className="text-left">Rec.No</TableHead>
                 <TableHead className="text-left">Amount</TableHead>
                 <TableHead className="text-left">Type</TableHead>
               </TableRow>
@@ -79,6 +78,9 @@ const OrderPaymentsDialog = ({ open, onOpenChange, orderId, customer }: Props) =
                     </TableCell>
                     <TableCell className="py-4 px-4">
                       <Skeleton className="h-4 w-16" />
+                    </TableCell>
+                    <TableCell className="py-4 px-4">
+                      <Skeleton className="h-4 w-20" />
                     </TableCell>
                     <TableCell className="py-4 px-4">
                       <Skeleton className="h-4 w-20" />
@@ -115,6 +117,7 @@ const OrderPaymentsDialog = ({ open, onOpenChange, orderId, customer }: Props) =
                   {payments?.map((item) => (
                     <TableRow key={item.serialNumber}>
                       <TableCell className="text-muted-foreground">{item.date}</TableCell>
+                      <TableCell className="text-muted-foreground">{item.receiptNo}</TableCell>
                       <TableCell className="text-muted-foreground">{item.amount}</TableCell>
                       <TableCell className="text-left">
                         <Badge className={`${item.type === "Installment" ? "bg-success text-success-foreground" : "bg-warning text-warning-foreground"}`}>

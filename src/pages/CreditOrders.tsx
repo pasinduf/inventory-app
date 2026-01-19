@@ -2,9 +2,8 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus,  Package, AlertCircle,View, Info, MoreHorizontal, Edit, ArrowBigRightDash, ArrowRight, PlusIcon } from "lucide-react";
+import { Search, Plus,  Package, AlertCircle,View, Info, MoreHorizontal, Edit, ArrowBigRightDash, ArrowRight, PlusIcon, PencilIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { yyyyMMDD } from "@/lib/dateFormatter";
 import { PaginationWrapper } from "@/components/PaginationWrapper";
 import { Badge } from "@/components/ui/badge";
 import { getCrditOrders } from "@/api/orders/getCrditOrders";
@@ -15,51 +14,67 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import OrderPaymentsDialog from "./components/order/OrderPaymentsDialog";
 import { AddPaymentDialog } from "./components/payment/AddPaymentDialog";
 import { useNavigate } from "react-router-dom";
+import { PaymentReceipt } from "@/entries/payment/payment";
+import PaymentReceiptPrint from "./components/payment/PaymentReceipt";
+import { UpdateCreditOrderDialog } from "./components/order/UpdateCreditOrderDialog";
+import { CreditOrderListResponse } from "@/entries/order/order-list-response";
 
 const CreditOrders = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
   const [isInitial, setIsInitial] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<CreditOrderListResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [status,setStatus] = useState<string>("active");
 
   const [openView, setOpenView] = useState(false);
   const [openAdd, setOpenAdd] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
   const [order, setOrder] = useState(null);
+  const [paymentResponse, setPaymentResponse] = useState<PaymentReceipt | null>(null);
 
-  const itemsPerPage = 5;
-
-  useEffect(() => {
-    const now = new Date();
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-    const today = now;
-
-    setFromDate(yyyyMMDD(firstDay));
-    setToDate(yyyyMMDD(today));
-  }, []);
+  const itemsPerPage = 10;
 
   useEffect(() => {
-    if (fromDate && toDate && isInitial) {
+    if (status && isInitial) {
       fetchOrders();
     }
-  }, [fromDate, toDate, isInitial]);
+  }, [isInitial]);
+
+   useEffect(() => {
+     if (!isInitial) {
+
+       if (searchQuery.length === 0) {
+         fetchOrders();
+         return;
+       }
+      if (searchQuery.length > 0 && searchQuery.length < 3) return;
+
+      const timer = setTimeout(() => {
+        fetchOrders();
+      }, 400); // debounce delay
+
+        return () => clearTimeout(timer);
+     }
+   }, [searchQuery,currentPage, status]);
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await getCrditOrders({
-        fromDate,
-        toDate,
-      });
-      setData(response.items);
+      const params = {
+        status,
+        searchTerm: searchQuery,
+        pageSize: itemsPerPage,
+        pageIndex: currentPage-1,
+      };
+
+      const response = await getCrditOrders(params);
+      setData(response);
       if (isInitial) setIsInitial(false);
-      handlePageChange(1);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch orders");
     } finally {
@@ -72,16 +87,50 @@ const CreditOrders = () => {
     setOpenView(open);
   };
 
-  const onOpenChangeAdd = (refresh:boolean,open: boolean) => {
+  const onOpenChangeAdd = (refresh:boolean,open: boolean,response?: PaymentReceipt) => {
     setOpenAdd(open);
+    if (refresh) fetchOrders();
+    if (response) {
+      setPaymentResponse(response);
+      setTimeout(() => {
+        handlePrint();
+      }, 1000);
+    }
+  };
+
+  
+  const onOpenChangeEdit = (refresh: boolean, open: boolean) => {
+    setOpenEdit(open);
+    setOrder(null);
     if (refresh) fetchOrders();
   };
 
-  const filteredData = data?.filter((order) => order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()));
 
-  const totalPages = Math.ceil(filteredData?.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedData = filteredData?.slice(startIndex, startIndex + itemsPerPage);
+   const handlePrint = () => {
+     const printContent = document.getElementById("payment_receipt")?.innerHTML;
+     const printWindow = window.open("", "", "width=600,height=800");
+     if (printWindow && printContent) {
+       printWindow.document.write(`
+      <html>
+        <head>
+          <style>
+            body { font-family: monospace; padding: 10px; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border-bottom: 1px solid #ddd; padding: 4px; }
+            th { text-align: left; }
+            .text-right { text-align: right; }
+          </style>
+        </head>
+        <body>${printContent}</body>
+      </html>
+    `);
+       printWindow.document.close();
+       printWindow.print();
+     }
+   };
+
+
+  const totalPages = Math.ceil(data?.count / itemsPerPage);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -100,24 +149,42 @@ const CreditOrders = () => {
       <Card className="shadow-card">
         <CardContent className="p-2">
           <div className="flex items-center gap-4">
-            <div className="relative flex-[6]">
+            <div className="relative flex-[10]">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search orders by order number" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
+              <Input
+                placeholder="Search orders by customer name , order number..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
             </div>
 
             <div className="flex-[2]">
+              <select
+                id="type"
+                name="type"
+                className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                value={status}
+                onChange={(e: any) => setStatus(e.target.value)}
+              >
+                <option value="active">Active</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+
+            {/* <div className="flex-[2]">
               <Input id="fromDate" type="date" placeholder="Select date" className="w-full" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
             </div>
 
             <div className="flex-[2]">
               <Input id="toDate" type="date" placeholder="Select date" className="w-full" value={toDate} onChange={(e) => setToDate(e.target.value)} />
-            </div>
+            </div> */}
 
-            <div className="flex-[2]">
+            {/* <div className="flex-[2]">
               <Button variant="outline" className="w-full" onClick={fetchOrders}>
                 Search
               </Button>
-            </div>
+            </div> */}
           </div>
         </CardContent>
       </Card>
@@ -126,7 +193,7 @@ const CreditOrders = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Orders ({filteredData?.length})
+            Orders ({data?.count})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -195,7 +262,7 @@ const CreditOrders = () => {
                       </div>
                     </TableCell>
                   </TableRow>
-                ) : paginatedData?.length === 0 ? (
+                ) : data?.items?.length === 0 ? (
                   // Empty state
                   <TableRow>
                     <TableCell colSpan={8} className="py-12 text-center">
@@ -209,7 +276,7 @@ const CreditOrders = () => {
                   </TableRow>
                 ) : (
                   // order rows
-                  paginatedData?.map((order) => (
+                  data?.items?.map((order) => (
                     <TableRow key={order.id} className="border-b border-border hover:bg-muted/50">
                       <TableCell className="py-4 px-4">
                         <div className="flex items-center gap-3">
@@ -223,7 +290,20 @@ const CreditOrders = () => {
                           </Button>
                         </OrderDetailsDialog>
                       </TableCell>
-                      <TableCell className="py-4 px-4 text-muted-foreground">{order.customer}</TableCell>
+                      <TableCell className="py-4 px-4 text-muted-foreground">
+                        {order.customer?.length > 20 ? (
+                          <HoverCard>
+                            <HoverCardTrigger asChild>
+                              <span>{order.customer?.substring(0, 20)}</span>
+                            </HoverCardTrigger>
+                            <HoverCardContent className="w-80">
+                              <p className="text-sm">{order.customer}</p>
+                            </HoverCardContent>
+                          </HoverCard>
+                        ) : (
+                          <span>{order.customer}</span>
+                        )}
+                      </TableCell>
                       <TableCell className="py-4 px-4 text-muted-foreground">{order.amount}</TableCell>
                       <TableCell className="py-4 px-4 text-muted-foreground">{order.downPayment}</TableCell>
                       <TableCell className="py-4 px-4 text-muted-foreground">
@@ -261,6 +341,17 @@ const CreditOrders = () => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            {order.isEditable && (
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setOrder(order);
+                                  setOpenEdit(true);
+                                }}
+                              >
+                                <PencilIcon className="h-4 w-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem
                               onClick={() => {
                                 setOrder(order);
@@ -284,8 +375,7 @@ const CreditOrders = () => {
                       </TableCell>
 
                       <TableCell className="py-4 px-4 text-right">
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => navigate(`/credit-order/${order.id}`)}
-                          >
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => navigate(`/credit-order/${order.id}`)}>
                           <ArrowRight className="h-3 w-3 text-muted-foreground" />
                         </Button>
                       </TableCell>
@@ -295,15 +385,18 @@ const CreditOrders = () => {
               </TableBody>
             </Table>
 
+            {order && <UpdateCreditOrderDialog creditOrder={order} open={openEdit} onOpenChange={onOpenChangeEdit} />}
             <OrderPaymentsDialog orderId={order?.id} customer={order?.customer} open={openView} onOpenChange={onOpenChangeView} />
             <AddPaymentDialog order={order} customer={order?.customer} open={openAdd} onOpenChange={onOpenChangeAdd} />
           </div>
 
-          {!loading && !error && paginatedData?.length > 0 && (
+          {!loading && !error && data?.items?.length > 0 && (
             <PaginationWrapper currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} className="mt-6" />
           )}
         </CardContent>
       </Card>
+
+      <div className="hidden">{paymentResponse && <PaymentReceiptPrint payment={paymentResponse} />}</div>
     </div>
   );
 };

@@ -94,7 +94,7 @@ export function AddCustomerDialog({ open, onOpenChange, customer }: Props) {
         onOpenChange(false, false);
       }}
     >
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{customer ? "Edit" : "Add New"} Customer</DialogTitle>
         </DialogHeader>

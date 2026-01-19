@@ -22,7 +22,8 @@ export class CreditOrder {
   downPayment: string;
   installmentAmount: string;
   remaining: string;
-  isCompleted:boolean;
+  isCompleted: boolean;
+  isEditable:boolean;
 }
 
 
@@ -53,6 +54,8 @@ export class CreateOrderResponse {
   status: boolean;
   message: string;
   order: OrderResponse;
+  isCreditOrder: boolean;
+  credit?: CreditOrderResponse;
 }
 
 export class OrderResponse {
@@ -72,4 +75,13 @@ export class OrderItemResponse {
   quantity: number;
   discount: number;
   amount: number;
+}
+
+export class CreditOrderResponse {
+  customerName: string;
+  amount: number;
+  downPayment: number;
+  period: number;
+  installmentAmount: number;
+  balance: number;
 }

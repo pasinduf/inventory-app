@@ -23,7 +23,7 @@ interface Props {
 const schema = z.object({
   date: z.string().min(1, "Date is required"),
   name: z.string().min(1, "Reason is required"),
-  amount: z.number().min(0, "Amount must be positive"),
+  amount: z.number().min(0.01, "Enter valid amount"),
   description: z.string().optional(),
 });
 
@@ -118,6 +118,7 @@ export function AddExpenseDialog({ open, onOpenChange, expense }: Props) {
                 step="any"
                 onFocus={(e) => e.target.select()}
               />
+              {errors.amount && <p className="text-red-500 text-sm">{errors.amount.message}</p>}
             </div>
 
             <div className="grid gap-2">
