@@ -28,6 +28,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AddProductDialog } from "./components/product/AddProductDialog";
 import { getCategoryOptions } from "@/api/category/getOptions";
 import { useAppStore } from "@/hooks/useAppStore";
+import { connectSocket } from "../socket";
 
 const Categories = () => {
 
@@ -61,6 +62,25 @@ const Categories = () => {
     }
   };
 
+
+  useEffect(() => {
+      const socket = connectSocket();
+      socket.on("categoryUpdated", (updatedCategory) => {
+        setData((prev) => {
+          if (!prev) return prev;
+          return prev.map((category) =>
+           category.id === updatedCategory.id
+             ? { ...category, ...updatedCategory }
+             : category,
+          );
+        });
+      });
+  
+      return () => {
+        socket.off("categoryUpdated");
+      };
+    }, []);
+  
 
   const onOpenChange = (refresh:boolean, open:boolean) =>{
     if (refresh) fetchCategories();
@@ -147,7 +167,7 @@ const Categories = () => {
               </CardContent>
             </Card>
           </div>
-        ) : data.length === 0 ? (
+        ) : data?.length === 0 ? (
           <div className="col-span-full">
             <Card className="shadow-card">
               <CardContent className="flex flex-col items-center justify-center py-12">
@@ -160,7 +180,7 @@ const Categories = () => {
             </Card>
           </div>
         ) : (
-          data.map((category) => (
+          data?.map((category) => (
             <Card key={category.id} className="shadow-card hover:shadow-elevated transition-shadow">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">

@@ -7,7 +7,7 @@ export const createClient = ({
   tokenRepository: TokenRepository;
 }) => {
   const client = axios.create({
-    baseURL: '/api' //import.meta.env.VITE_APP_SERVER_PATH,
+    baseURL: import.meta.env.VITE_APP_SERVER_PATH, //'/api' 
   });
 
   //let refreshRequest: AxiosPromise | null = null;
