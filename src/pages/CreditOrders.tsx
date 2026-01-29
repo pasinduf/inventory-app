@@ -1,26 +1,21 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus,  Package, AlertCircle,View, Info, MoreHorizontal, Edit, ArrowBigRightDash, ArrowRight, PlusIcon, PencilIcon } from "lucide-react";
+import { Search,  Package, AlertCircle} from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PaginationWrapper } from "@/components/PaginationWrapper";
-import { Badge } from "@/components/ui/badge";
 import { getCrditOrders } from "@/api/orders/getCrditOrders";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import OrderDetailsDialog from "./components/order/OrderDetailsDialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import OrderPaymentsDialog from "./components/order/OrderPaymentsDialog";
 import { AddPaymentDialog } from "./components/payment/AddPaymentDialog";
-import { useNavigate } from "react-router-dom";
 import { PaymentReceipt } from "@/entries/payment/payment";
 import PaymentReceiptPrint from "./components/payment/PaymentReceipt";
 import { UpdateCreditOrderDialog } from "./components/order/UpdateCreditOrderDialog";
 import { CreditOrderListResponse } from "@/entries/order/order-list-response";
+import CreditOrderRow from "./components/order/CreditOrderRaw";
+import { CreditOrder } from "@/entries/order/order";
 
 const CreditOrders = () => {
-  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [isInitial, setIsInitial] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -54,7 +49,7 @@ const CreditOrders = () => {
 
       const timer = setTimeout(() => {
         fetchOrders();
-      }, 400); // debounce delay
+      }, 500);
 
         return () => clearTimeout(timer);
      }
@@ -104,6 +99,24 @@ const CreditOrders = () => {
     setOrder(null);
     if (refresh) fetchOrders();
   };
+
+
+  const handleEdit = useCallback((order: CreditOrder) => {
+    setOrder(order);
+    setOpenEdit(true);
+  }, []);
+  
+
+  const handleAddPayment = useCallback((order: CreditOrder) => {
+    setOrder(order);
+    setOpenAdd(true);
+  }, []);
+
+  const handleViewPayments = useCallback((order: CreditOrder) => {
+    setOrder(order);
+    setOpenView(true);
+  }, []);
+  
 
 
    const handlePrint = () => {
@@ -277,115 +290,25 @@ const CreditOrders = () => {
                 ) : (
                   // order rows
                   data?.items?.map((order) => (
-                    <TableRow key={order.id} className="border-b border-border hover:bg-muted/50">
-                      <TableCell className="py-4 px-4">
-                        <div className="flex items-center gap-3">
-                          <span className="font-medium text-muted-foreground">{order.date}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-4 px-4 cursor-pointer">
-                        <OrderDetailsDialog orderId={order.orderId} orderNumber={order.orderNumber}>
-                          <Button variant="outline" size="sm">
-                            {order.orderNumber}
-                          </Button>
-                        </OrderDetailsDialog>
-                      </TableCell>
-                      <TableCell className="py-4 px-4 text-muted-foreground">
-                        {order.customer?.length > 20 ? (
-                          <HoverCard>
-                            <HoverCardTrigger asChild>
-                              <span>{order.customer?.substring(0, 20)}</span>
-                            </HoverCardTrigger>
-                            <HoverCardContent className="w-80">
-                              <p className="text-sm">{order.customer}</p>
-                            </HoverCardContent>
-                          </HoverCard>
-                        ) : (
-                          <span>{order.customer}</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="py-4 px-4 text-muted-foreground">{order.amount}</TableCell>
-                      <TableCell className="py-4 px-4 text-muted-foreground">{order.downPayment}</TableCell>
-                      <TableCell className="py-4 px-4 text-muted-foreground">
-                        {order.remaining}
-
-                        <HoverCard>
-                          <HoverCardTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-5 w-5 p-0 ml-2">
-                              <Info className="h-3 w-3 text-muted-foreground" />
-                            </Button>
-                          </HoverCardTrigger>
-                          <HoverCardContent className="w-auto">
-                            <div>
-                              <div className="text-muted-foreground">Start Date: {order.startDate}</div>
-                              <div className="text-muted-foreground">End Date: {order.endDate}</div>
-                              <div className="text-muted-foreground">Period: {order.period} DAYS</div>
-                              <div className="text-muted-foreground">Installment: {order.installmentAmount}</div>
-                            </div>
-                          </HoverCardContent>
-                        </HoverCard>
-                      </TableCell>
-                      <TableCell className="text-left">
-                        {order.isCompleted ? (
-                          <Badge className="bg-success text-success-foreground">Completed</Badge>
-                        ) : (
-                          <Badge className="bg-warning text-warning-foreground">Active</Badge>
-                        )}
-                      </TableCell>
-
-                      <TableCell className="text-left">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {order.isEditable && (
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setOrder(order);
-                                  setOpenEdit(true);
-                                }}
-                              >
-                                <PencilIcon className="h-4 w-4 mr-2" />
-                                Edit
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setOrder(order);
-                                setOpenAdd(true);
-                              }}
-                            >
-                              <PlusIcon className="h-4 w-4 mr-2" />
-                              Add Payment
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setOrder(order);
-                                setOpenView(true);
-                              }}
-                            >
-                              <Package className="h-4 w-4 mr-2" />
-                              View Payments
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-
-                      <TableCell className="py-4 px-4 text-right">
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => navigate(`/credit-order/${order.id}`)}>
-                          <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
+                    <CreditOrderRow
+                        key={order.id}
+                        order={order}
+                        handleEdit={handleEdit}
+                        handleAddPayment={handleAddPayment}
+                        handleViewPayments={handleViewPayments}
+                    />
                   ))
                 )}
               </TableBody>
             </Table>
 
-            {order && <UpdateCreditOrderDialog creditOrder={order} open={openEdit} onOpenChange={onOpenChangeEdit} />}
+            {order && 
+              <UpdateCreditOrderDialog 
+                creditOrder={order} 
+                open={openEdit} 
+                onOpenChange={onOpenChangeEdit} 
+              />
+            }
             <OrderPaymentsDialog orderId={order?.id} customer={order?.customer} open={openView} onOpenChange={onOpenChangeView} />
             <AddPaymentDialog order={order} customer={order?.customer} open={openAdd} onOpenChange={onOpenChangeAdd} />
           </div>

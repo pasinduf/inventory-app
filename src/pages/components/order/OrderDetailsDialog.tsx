@@ -5,10 +5,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Package,AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getOrderDetails } from "@/api/orders/getOrderDetails";
-import { getDate, getTime, yyyyMMDD } from "@/lib/dateFormatter";
+import { getDate, getTime, } from "@/lib/dateFormatter";
 import { Badge } from "@/components/ui/badge";
 import { formatNumber } from "@/lib/decimalFormatter";
-
 
 interface Props {
   orderId: number;
@@ -17,6 +16,7 @@ interface Props {
 }
 
 const OrderDetailsDialog = ({ orderId, orderNumber, children }: Props) => {
+
   const [open, setOpen] = useState(false);
 
   const [loading, setLoading] = useState(true);
@@ -25,7 +25,6 @@ const OrderDetailsDialog = ({ orderId, orderNumber, children }: Props) => {
   
   const itemsPerPage = 5;
 
-  
 
   useEffect(() => {
     if (open && orderId) {
