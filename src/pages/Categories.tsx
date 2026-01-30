@@ -16,11 +16,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getCategories } from "@/api/category/getCategories";
 import { AddCategoryDialog } from "./components/category/AddCategoryDialog";
-import CategoryProductsDialog from "./components/category/CategoryProductsDialog";
-import ConfirmDialog from "@/components/ui/confirm-dialog";
 import { deleteCategory } from "@/api/category/deleteCategory";
 import { useToast } from "@/hooks/use-toast";
 import { DEFAULT_ERROR_MESSAGE } from "@/api/const";
@@ -28,12 +26,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AddProductDialog } from "./components/product/AddProductDialog";
 import { getCategoryOptions } from "@/api/category/getOptions";
 import { useAppStore } from "@/hooks/useAppStore";
+import { Category } from "@/entries/category/category";
+import CategoryCard from "./components/category/CategoryCard";
 
 const Categories = () => {
 
   const { store, setStore }: any = useAppStore();
   const { toast } = useToast();
-  const [data,setData] = useState([]);
+  const [data,setData] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
@@ -41,7 +41,6 @@ const Categories = () => {
   const [newProduct, setnewProduct] = useState(null);
   const [openAddProduct, setOpenAddProduct] = useState(false);
   const itemsPerPage = 6;
-
 
    useEffect(() => {
       fetchCategories();
@@ -68,30 +67,37 @@ const Categories = () => {
     setCategory(null);
   }
 
-  const onDeleteCategory= async (id)=>{
-    try {
-      const result = await deleteCategory(id);
-      if (result) {
-        toast({
-          variant: "success",
-          title: `Category Deleted Successfully`,
-        });
-        fetchCategories();
+
+   const onDeleteCategory = async (id) => {
+     try {
+       const result = await deleteCategory(id);
+       if (result) {
+         toast({
+           variant: "success",
+           title: `Category Deleted Successfully`,
+         });
+         fetchCategories();
          const list = await getCategoryOptions();
-          setStore({
-            ...store,
-            categories: list,
-          });
-      }
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: `${(error as any)?.response?.data?.message || DEFAULT_ERROR_MESSAGE}`,
-      });
-    }
-  }
+         setStore({
+           ...store,
+           categories: list,
+         });
+       }
+     } catch (error: any) {
+       toast({
+         variant: "destructive",
+         title: `${(error as any)?.response?.data?.message || DEFAULT_ERROR_MESSAGE}`,
+       });
+     }
+   };
 
+  const handleDelete = useCallback((id) => {
+        onDeleteCategory(id);
+      },
+    [onDeleteCategory],
+  );
 
+ 
   const onOpenAddProductChange = (refresh: boolean, open: boolean) => {
     if (refresh) fetchCategories();
     setOpenAddProduct(open);
@@ -161,87 +167,15 @@ const Categories = () => {
           </div>
         ) : (
           data.map((category) => (
-            <Card key={category.id} className="shadow-card hover:shadow-elevated transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center`}>
-                      <FolderTree className="h-6 w-6 text-white" />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <CardTitle className="text-lg">{category.name}</CardTitle>
-                      <Badge variant="secondary" className="mt-1 text-sm text-muted-foreground">
-                        <Package className="h-3 w-3 mr-1" />
-                        {category.productCount} {category.productCount > 1 ? "products" : "product"}
-                      </Badge>
-                    </div>
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setCategory(category);
-                          setOpen(true);
-                        }}
-                      >
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit Category
-                      </DropdownMenuItem>
-
-                      <ConfirmDialog
-                        title="Delete Category"
-                        description={`Are you sure you want to delete the "${category.name}" category, with existing ${category.productCount} products?`}
-                        confirmText="Delete"
-                        variant="destructive"
-                        onConfirm={() => onDeleteCategory(category.id)}
-                      >
-                        <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete Category
-                        </DropdownMenuItem>
-                      </ConfirmDialog>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground text-sm mb-4">{category.description}</p>
-                <div className="flex items-center justify-between">
-                  <div>
-                    {category.productCount > 0 && (
-                      <CategoryProductsDialog category={category}>
-                        <Button variant="outline" size="sm">
-                          View Products
-                        </Button>
-                      </CategoryProductsDialog>
-                    )}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setnewProduct({
-                        name: "",
-                        category: `${category.id}`,
-                        supplier: "",
-                        unit: "",
-                        quantity: 0,
-                        buyingPrice: 0,
-                        sellingPrice: 0,
-                      });
-                      setOpenAddProduct(true);
-                    }}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <CategoryCard
+              key={category.id}
+              category={category}
+              setCategory={setCategory}
+              setOpen={setOpen}
+              onDelete={handleDelete}
+              setnewProduct={setnewProduct}
+              setOpenAddProduct={setOpenAddProduct}
+            />
           ))
         )}
         <AddProductDialog open={openAddProduct} onOpenChange={onOpenAddProductChange} newProduct={newProduct} />

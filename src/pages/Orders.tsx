@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,8 +15,10 @@ import ConfirmDialog from "@/components/ui/confirm-dialog";
 import { deleteOrder } from "@/api/orders/deleteOrder";
 import { DEFAULT_ERROR_MESSAGE } from "@/api/const";
 import { printOrder } from "@/api/orders/printOrder";
-import { CreateOrderResponse } from "@/entries/order/order";
+import { CreateOrderResponse, Order } from "@/entries/order/order";
 import OrderReceipt from "./components/order/OrderReceipt";
+import OrderRaw from "./components/order/OrderRaw";
+import { get } from "http";
 
 const Orders = () => {
 
@@ -26,7 +28,7 @@ const Orders = () => {
   const [toDate, setToDate] = useState("");
   const [isInitial, setIsInitial] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingPrint, setLoadingPrint] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -67,74 +69,87 @@ const Orders = () => {
     }
   };
 
-   const onDeleteOrder= async (id)=>{
-      try {
-        const result = await deleteOrder(id);
-        if (result) {
-          toast({
-            variant: "success",
-            title: `Order Deleted Successfully`,
-          });
-          fetchOrders();
-        }
-      } catch (error: any) {
-        toast({
-          variant: "destructive",
-          title: `${(error as any)?.response?.data?.message || DEFAULT_ERROR_MESSAGE}`,
-        });
-      }
-    }
-
-
-  const filteredData = data?.filter((order) => order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()));
-
-  const totalPages = Math.ceil(filteredData?.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedData = filteredData?.slice(startIndex, startIndex + itemsPerPage);
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
 
-  const getPrintDetails=async (id:number)=>{
+
+  const handlePrint = useCallback(async (id: number) => {
     try {
-          setLoadingPrint(true);
-          setError(null);
-          const response = await printOrder(id);
-          setOrderResponse(response);
-          setTimeout(() => {
-            handlePrint();
-          }, 1000);
+      setLoadingPrint(true);
+      setError(null);
+
+      const response = await printOrder(id);
+      setOrderResponse(response);
+
+      setTimeout(() => {
+        printReceipt();
+      }, 1000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch print order details");
     } finally {
       setLoadingPrint(false);
     }
-  }
+  }, []);
 
-   const handlePrint = () => {
-     const printContent = document.getElementById("order_receipt")?.innerHTML;
-     const printWindow = window.open("", "", "width=600,height=800");
-     if (printWindow && printContent) {
-       printWindow.document.write(`
-      <html>
-        <head>
-          <style>
-            body { font-family: monospace; padding: 10px; }
-            table { width: 100%; border-collapse: collapse; }
-            th, td { border-bottom: 1px solid #ddd; padding: 4px; }
-            th { text-align: left; }
-            .text-right { text-align: right; }
-          </style>
-        </head>
-        <body>${printContent}</body>
-      </html>
-    `);
-       printWindow.document.close();
-       printWindow.print();
+
+  const printReceipt = () => {
+    const printContent = document.getElementById("order_receipt")?.innerHTML;
+    const printWindow = window.open("", "", "width=600,height=800");
+    if (printWindow && printContent) {
+      printWindow.document.write(`
+    <html>
+      <head>
+        <style>
+          body { font-family: monospace; padding: 10px; }
+          table { width: 100%; border-collapse: collapse; }
+          th, td { border-bottom: 1px solid #ddd; padding: 4px; }
+          th { text-align: left; }
+          .text-right { text-align: right; }
+        </style>
+      </head>
+      <body>${printContent}</body>
+    </html>
+  `);
+      printWindow.document.close();
+      printWindow.print();
+    }
+  };
+
+
+   const onDeleteOrder = async (id) => {
+     try {
+       const result = await deleteOrder(id);
+       if (result) {
+         toast({
+           variant: "success",
+           title: `Order Deleted Successfully`,
+         });
+         fetchOrders();
+       }
+     } catch (error: any) {
+       toast({
+         variant: "destructive",
+         title: `${(error as any)?.response?.data?.message || DEFAULT_ERROR_MESSAGE}`,
+       });
      }
    };
 
+  const handleDelete = useCallback((id:number)=>{
+    onDeleteOrder(id);
+  },[onDeleteOrder])
+
+
+   const filteredData = useMemo(() => {
+     return data?.filter((order) => order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()));
+   }, [data, searchQuery]);
+
+   const totalPages = Math.ceil(filteredData?.length / itemsPerPage);
+
+   const paginatedData = useMemo(() => {
+     const startIndex = (currentPage - 1) * itemsPerPage;
+     return filteredData?.slice(startIndex, startIndex + itemsPerPage);
+   }, [filteredData, currentPage, itemsPerPage]);
 
 
   return (
@@ -247,61 +262,12 @@ const Orders = () => {
                 ) : (
                   // order rows
                   paginatedData?.map((order) => (
-                    <tr key={order.id} className="border-b border-border hover:bg-muted/50">
-                      <td className="py-4 px-4">
-                        <div className="flex items-center gap-3 text-muted-foreground">
-                          <span className="font-medium">{order.date}</span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4 text-muted-foreground">
-                        <span>{order.orderNumber}</span>
-                      </td>
-                      <td className="py-4 px-4 text-muted-foreground">{order.amount}</td>
-                      <td className="py-4 px-4 text-muted-foreground">{order.discount}</td>
-
-                      <td className="py-4 px-4">
-                        {order.isCreditOrder ? (
-                          <Badge className="bg-warning text-warning-foreground">Credit</Badge>
-                        ) : (
-                          <Badge className="bg-success text-success-foreground">Cash</Badge>
-                        )}
-                      </td>
-
-                      <td className="py-4 px-4 text-right">
-                        <OrderDetailsDialog orderId={order.id} orderNumber={order.orderNumber}>
-                          <Button variant="ghost" size="sm" className="h-5 w-5 p-0 ml-2">
-                            <List className="h-3 w-3 text-muted-foreground" />
-                          </Button>
-                        </OrderDetailsDialog>
-                      </td>
-                      <td>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => getPrintDetails(order.id)}>
-                              <PrinterIcon className="h-4 w-4 mr-2" />
-                              Print 
-                            </DropdownMenuItem>
-                            <ConfirmDialog
-                              title="Delete Order"
-                              description="Are you sure you want to delete this order?"
-                              confirmText="Delete"
-                              variant="destructive"
-                              onConfirm={() => onDeleteOrder(order.id)}
-                            >
-                              <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete Order
-                              </DropdownMenuItem>
-                            </ConfirmDialog>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </td>
-                    </tr>
+                   <OrderRaw 
+                      key={order.id}
+                      order={order} 
+                      handlePrint={handlePrint}
+                      handeDelete={handleDelete}
+                    />
                   ))
                 )}
               </tbody>
