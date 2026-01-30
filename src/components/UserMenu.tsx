@@ -21,9 +21,7 @@ export function UserMenu() {
   const [open, setOpen] = useState(false);
 
   
-  const handleProfile = () => {
-    console.log("Navigate to profile");
-  };
+  const handleProfile = () => {};
 
 
    const onConfirmLogout = () => {
