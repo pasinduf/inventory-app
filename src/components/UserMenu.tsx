@@ -23,7 +23,6 @@ export function UserMenu() {
   
   const handleProfile = () => {};
 
-
    const onConfirmLogout = () => {
      setAuth({});
      tokenRepository.removeAccessAuth();
